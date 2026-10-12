@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turbo Cars | GTA V</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b0d12;color:#fff;font-family:Arial,sans-serif;padding:24px}
+header{text-align:center;padding:25px 0}
+h1{color:#ff6b22;font-size:36px}
+p{color:#b8bdc9;line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;max-width:1000px;margin:25px auto}
+.car{background:#171b25;border:1px solid #303747;padding:20px;border-radius:14px}
+.car h2{font-size:20px;direction:ltr;text-align:right}
+button{background:#ff6b22;color:#111;border:0;border-radius:8px;padding:12px;width:100%;font-weight:bold;cursor:pointer}
+#status{max-width:1000px;margin:20px auto;padding:15px;background:#171b25;border-radius:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>TURBO CARS</h1>
+<p>قائمة السيارات الخارقة — GTA V PS4</p>
+</header>
+
+<div class="grid" id="cars"></div>
+<div id="status">الحالة: الصفحة تعمل، لكن الاتصال باللعبة غير مفعّل.</div>
+
+<script>
+const cars=[
+"Lamborghini Aventador",
+"Bugatti Chiron",
+"Ferrari SF90",
+"Nissan Skyline R34",
+"Toyota Supra MK4"
+];
+
+const grid=document.getElementById("cars");
+const status=document.getElementById("status");
+
+cars.forEach(name=>{
+ const card=document.createElement("div");
+ card.className="car";
+
+ const title=document.createElement("h2");
+ title.textContent=name;
+
+ const description=document.createElement("p");
+ description.textContent="سيارة ضمن قائمة المود.";
+
+ const button=document.createElement("button");
+ button.textContent="اختيار السيارة";
+ button.onclick=()=>{
+   status.textContent="تم اختيار "+name+" — اختيار تجريبي فقط، لم يتم استدعاؤها داخل اللعبة.";
+ };
+
+ card.append(title,description,button);
+ grid.appendChild(card);
+});
+</script>
+</body>
+</html>
