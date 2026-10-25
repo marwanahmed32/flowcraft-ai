@@ -210,7 +210,7 @@ function unwrap(d, depth = 0) {
     try { return unwrap(JSON.parse(d.replace(/```json|```/g, "").trim()), depth + 1); } catch (e) { return { report: d }; }
   }
   if (Array.isArray(d)) return unwrap(d[0], depth + 1);
-  if (typeof d === "object" && !d.kpis && !d.report && !d.summary && !d.recommendations) {
+  if (typeof d === "object" && !d.kpis && !d.report && !d.summary && !d.recommendations && !d.dashboard_url && !d.dashboardUrl) {
     for (const k of ["output", "json", "data", "body", "response", "text", "message", "content"]) {
       if (d[k] != null) return unwrap(d[k], depth + 1);
     }
@@ -221,7 +221,7 @@ function normalize(d) {
   d = unwrap(d);
   return {
     kpis: d.kpis || {},
-    report: d.report || d.summary || "",
+    report: d.report || d.summary || (typeof d.message === "string" ? d.message : ""),
     recommendations: Array.isArray(d.recommendations) ? d.recommendations : [],
     url: d.dashboard_url || d.dashboardUrl || ""
   };
