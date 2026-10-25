@@ -3,24 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FlowCraft AI — حلل بيانات مطعمك بالذكاء الاصطناعي</title>
+<title>FlowCraft AI — لوحة تحكم ذكية من ملف الإكسيل</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{--bg:#090D16;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.1);--g:#10B981;--t:#2DD4BF;--muted:#94a3b8}
 html{scroll-behavior:smooth;color-scheme:dark}
-body{background:var(--bg);color:#e8eef7;font-family:Cairo,Inter,system-ui,sans-serif;overflow-x:hidden}
+body{background:var(--bg);color:#e8eef7;font-family:Cairo,system-ui,sans-serif;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(600px 400px at 85% 5%,rgba(16,185,129,.22),transparent),radial-gradient(500px 400px at 5% 60%,rgba(45,212,191,.14),transparent)}
 .glass{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:1.25rem}
 .grad{background:linear-gradient(120deg,var(--g),var(--t));-webkit-background-clip:text;background-clip:text;color:transparent}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.6rem;border-radius:999px;font-weight:700;border:0;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.6rem;border-radius:999px;font-weight:700;border:0;cursor:pointer;transition:transform .2s}
 .btn-p{background:linear-gradient(120deg,var(--g),var(--t));color:#04130e;box-shadow:0 10px 30px -10px rgba(16,185,129,.7)}
 .btn-p:hover:not(:disabled){transform:translateY(-2px)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .btn-g{background:var(--card);border:1px solid var(--line);color:#e8eef7}
-.btn-g:hover{border-color:var(--g)}
 .drop{border:2px dashed rgba(16,185,129,.5);transition:all .2s;cursor:pointer}
 .drop.over{background:rgba(16,185,129,.12);border-color:var(--t)}
 .field{width:100%;padding:.85rem 1rem;border-radius:.9rem;background:rgba(255,255,255,.04);border:1px solid var(--line);color:inherit;font-family:inherit}
@@ -31,259 +32,273 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-grad
 .chip:hover{border-color:var(--g)}
 .fade{animation:f .5s ease both}
 @keyframes f{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.cbox{position:relative;height:260px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:.5rem .6rem;text-align:start;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--t);font-weight:600}
+.scroll{overflow-x:auto}
+.mut{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
 </style>
 </head>
 <body>
-
 <header class="sticky top-0 z-30" style="padding-top:env(safe-area-inset-top,0px)">
   <nav class="glass mx-3 mt-3 md:mx-auto md:max-w-5xl flex items-center justify-between px-5 py-3">
     <a href="#top" class="flex items-center gap-2 font-extrabold text-lg" dir="ltr">
-      <span class="w-8 h-8 rounded-lg grid place-items-center text-[#04130e]" style="background:linear-gradient(135deg,var(--g),var(--t))">F</span>
-      FlowCraft <span class="grad">AI</span>
+      <span class="w-8 h-8 rounded-lg grid place-items-center text-[#04130e]" style="background:linear-gradient(135deg,var(--g),var(--t))">F</span>FlowCraft <span class="grad">AI</span>
     </a>
-    <div class="flex gap-2">
-      <a href="#try" class="btn btn-g !py-2 !px-4 text-sm">تواصل معنا</a>
-      <a href="#try" class="btn btn-p !py-2 !px-4 text-sm">تسجيل الدخول</a>
-    </div>
+    <a href="#try" class="btn btn-p !py-2 !px-4 text-sm">جرب النظام</a>
   </nav>
 </header>
 
 <main id="top">
-<section class="px-5 pt-16 pb-14 text-center max-w-4xl mx-auto">
-  <p class="inline-block glass px-4 py-1.5 text-sm mb-6" style="color:var(--t)">✦ تحليل ذكي لمطاعم وكافيهات</p>
-  <h1 class="text-4xl sm:text-6xl font-extrabold leading-[1.25]">ارفع ملف الإكسيل، واحصل على <span class="grad">لوحة تحكم</span> بتفهم مطعمك</h1>
-  <p class="mt-5 text-lg max-w-2xl mx-auto" style="color:var(--muted)">اسأل زي ما بتكلم موظفك: «إيه أكتر المنتجات ربحاً؟». الذكاء الاصطناعي يحلل مبيعاتك وطلباتك ويطلعلك أرقام وتوصيات وDashboard تفاعلي في ثواني.</p>
-  <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-    <a href="#try" class="btn btn-p">جرب النظام الآن</a>
-    <a href="#try" class="btn btn-g">ارفع ملفك</a>
-  </div>
-  <div class="mt-12 grid grid-cols-3 gap-3 text-sm">
-    <div class="glass py-4"><b class="block text-2xl grad">+30</b>مؤشر أداء</div>
-    <div class="glass py-4"><b class="block text-2xl grad">&lt; 1 د</b>زمن التحليل</div>
-    <div class="glass py-4"><b class="block text-2xl grad">xlsx</b>و xls مباشرة</div>
-  </div>
+<section class="px-5 pt-14 pb-10 text-center max-w-4xl mx-auto">
+  <p class="inline-block glass px-4 py-1.5 text-sm mb-5" style="color:var(--t)">✦ لوحة تحكم بتتصمم على حسب بياناتك</p>
+  <h1 class="text-4xl sm:text-6xl font-extrabold leading-[1.25]">ارفع الشيت، والذكاء الاصطناعي <span class="grad">يصمم الداشبورد</span></h1>
+  <p class="mt-5 text-lg max-w-2xl mx-auto mut">كل الأرقام بتتحسب من الملف نفسه بدقة، والذكاء الاصطناعي بيختار الرسومات والمؤشرات المناسبة لبياناتك وطلبك، فمفيش شكل ثابت.</p>
 </section>
 
-<!-- UPLOAD + CHAT -->
-<section id="try" class="px-5 py-12 max-w-3xl mx-auto scroll-mt-24">
+<section id="try" class="px-5 pb-10 max-w-3xl mx-auto scroll-mt-24">
   <div class="glass p-5 md:p-8">
-    <h2 class="text-2xl font-bold mb-5">ابدأ التحليل</h2>
-
     <div id="drop" class="drop rounded-2xl p-8 text-center" tabindex="0" role="button" aria-label="اختر ملف إكسيل">
       <div class="text-4xl mb-2">📊</div>
       <p class="font-semibold" id="dropText">اسحب ملف الإكسيل هنا أو اضغط للاختيار</p>
-      <p class="text-sm mt-1" style="color:var(--muted)">.xlsx / .xls — حتى 5 ميجا</p>
-      <input id="file" type="file" accept=".xlsx,.xls" class="hidden">
+      <p class="text-sm mt-1 mut">.xlsx / .xls / .csv — حتى 10 ميجا</p>
+      <input id="file" type="file" accept=".xlsx,.xls,.csv" class="hidden">
     </div>
-
-    <div class="flex flex-wrap gap-2 mt-5" aria-label="أمثلة سريعة">
-      <button class="chip" type="button">اعملي Dashboard للمبيعات</button>
+    <div class="flex flex-wrap gap-2 mt-5">
+      <button class="chip" type="button">اعملي Dashboard شامل للمبيعات</button>
       <button class="chip" type="button">إيه أكتر المنتجات ربحاً؟</button>
-      <button class="chip" type="button">إيه أوقات الذروة في الطلبات؟</button>
+      <button class="chip" type="button">حلل الأداء حسب الوقت</button>
     </div>
-
-    <textarea id="prompt" rows="3" class="field mt-3" placeholder="اكتب طلبك هنا..."></textarea>
+    <textarea id="prompt" rows="3" class="field mt-3" placeholder="اكتب طلبك هنا... (اختياري، لو فاضي هيعمل داشبورد شامل)"></textarea>
     <p id="err" class="text-sm mt-2" style="color:#fda4af" role="alert"></p>
-    <button id="send" class="btn btn-p w-full mt-3">إرسال للتحليل ←</button>
-    <p id="mode" class="text-xs mt-3 text-center" style="color:var(--muted)"></p>
+    <button id="send" class="btn btn-p w-full mt-3">حلل وابنِ لوحة التحكم ←</button>
   </div>
-
-  <!-- LOADING -->
   <div id="loading" class="glass p-10 mt-6 text-center hidden" aria-live="polite">
     <div class="spin mx-auto mb-4"></div>
-    <p class="font-semibold">الذكاء الاصطناعي بيحلل بياناتك...</p>
-    <p class="text-sm mt-1" style="color:var(--muted)" id="loadStep">بنقرأ الملف</p>
+    <p class="font-semibold">بنحلل الشيت ونصمم اللوحة...</p>
+    <p class="text-sm mt-1 mut" id="loadStep">بنقرأ الملف</p>
   </div>
-
-  <!-- RESULTS -->
-  <div id="results" class="mt-6 hidden"></div>
 </section>
-</main>
 
-<footer class="text-center text-sm py-10" style="color:var(--muted)">© <span id="yr"></span> FlowCraft AI — FlowCraft for AI Automation Engineering</footer>
+<section id="out" class="px-4 pb-16 max-w-6xl mx-auto hidden scroll-mt-20"></section>
+</main>
+<footer class="text-center text-sm py-10 mut">© <span id="yr"></span> FlowCraft AI</footer>
 
 <script>
-/* ============ الإعدادات: ضع رابط الـ Webhook هنا ============ */
-const CONFIG = {
-  WEBHOOK_URL: "https://mrmrwan.app.n8n.cloud/webhook/flowcraft-api",
-  MAX_MB: 5,
-  TIMEOUT_MS: 120000        // دقيقتين
-};
-/* لو WEBHOOK_URL فاضي، الموقع بيشتغل في وضع تجريبي ببيانات وهمية */
-
+const CONFIG = { WEBHOOK_URL: "https://mrmrwan.app.n8n.cloud/webhook/flowcraft-api", MAX_MB: 10, TIMEOUT_MS: 120000, SAMPLE_ROWS: 20 };
+const PAL = ["#10B981","#2DD4BF","#34D399","#5EEAD4","#059669","#14B8A6","#6EE7B7","#0D9488","#A7F3D0","#99F6E4"];
 const $ = s => document.querySelector(s);
 $("#yr").textContent = new Date().getFullYear();
-$("#mode").textContent = CONFIG.WEBHOOK_URL ? "" : "وضع تجريبي: لم يتم ضبط رابط الـ Webhook بعد، النتائج المعروضة وهمية.";
+Chart.defaults.color = "#94a3b8"; Chart.defaults.font.family = "Cairo, sans-serif";
+Chart.defaults.borderColor = "rgba(255,255,255,.08)";
 
-let selectedFile = null;
-const drop = $("#drop"), fileInput = $("#file");
-
-drop.addEventListener("click", () => fileInput.click());
-drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
+let file = null, charts = [];
+const drop = $("#drop"), inp = $("#file");
+drop.onclick = () => inp.click();
+drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inp.click(); } };
 ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", e => setFile(e.dataTransfer.files[0]));
-fileInput.addEventListener("change", () => setFile(fileInput.files[0]));
-document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("#prompt").value = c.textContent; $("#prompt").focus(); }));
+inp.onchange = () => setFile(inp.files[0]);
+document.querySelectorAll(".chip").forEach(c => c.onclick = () => { $("#prompt").value = c.textContent; });
 
 function setFile(f) {
   $("#err").textContent = "";
   if (!f) return;
-  if (!/\.(xlsx|xls)$/i.test(f.name)) { $("#err").textContent = "الملف لازم يكون Excel (.xlsx أو .xls)."; return; }
-  if (f.size > CONFIG.MAX_MB * 1024 * 1024) { $("#err").textContent = "حجم الملف أكبر من " + CONFIG.MAX_MB + " ميجا."; return; }
-  selectedFile = f;
-  $("#dropText").textContent = "✓ " + f.name + " (" + (f.size / 1024).toFixed(0) + " KB)";
+  if (!/\.(xlsx|xls|csv)$/i.test(f.name)) return $("#err").textContent = "الملف لازم يكون Excel أو CSV.";
+  if (f.size > CONFIG.MAX_MB * 1048576) return $("#err").textContent = "الملف أكبر من " + CONFIG.MAX_MB + " ميجا.";
+  file = f; $("#dropText").textContent = "✓ " + f.name;
 }
 
-const toBase64 = file => new Promise((res, rej) => {
-  const r = new FileReader();
-  r.onload = () => res(String(r.result).split(",")[1]);
-  r.onerror = () => rej(new Error("تعذر قراءة الملف"));
-  r.readAsDataURL(file);
-});
+/* ---------- قراءة الشيت ---------- */
+const num = v => typeof v === "number" ? v : (typeof v === "string" ? parseFloat(v.replace(/[,\s%$٬]|ج\.م|EGP/gi, "")) : NaN);
+const isIso = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) && !isNaN(Date.parse(v));
 
-$("#send").addEventListener("click", async () => {
-  const prompt = $("#prompt").value.trim();
-  $("#err").textContent = "";
-  if (!selectedFile) { $("#err").textContent = "من فضلك ارفع ملف الإكسيل الأول."; return; }
-  if (!prompt) { $("#err").textContent = "اكتب طلبك أو اختار مثال سريع."; return; }
-
-  setLoading(true);
-  try {
-    const data = await analyze(selectedFile, prompt);
-    renderResults(normalize(data));
-  } catch (e) {
-    console.error(e);
-    $("#err").textContent = e.name === "AbortError" ? "الرد اتأخر. جرب تاني بعد شوية." : "حصلت مشكلة: " + e.message;
-  } finally { setLoading(false); }
-});
-
-function setLoading(on) {
-  $("#loading").classList.toggle("hidden", !on);
-  $("#send").disabled = on;
-  $("#send").textContent = on ? "جاري التحليل..." : "إرسال للتحليل ←";
-  if (on) {
-    $("#results").classList.add("hidden");
-    const steps = ["بنقرأ الملف", "بننضف البيانات", "بنحسب المؤشرات", "بنكتب التوصيات"];
-    let i = 0; clearInterval(window._ls);
-    window._ls = setInterval(() => { $("#loadStep").textContent = steps[++i % steps.length]; }, 2500);
-    $("#loading").scrollIntoView({ behavior: "smooth", block: "center" });
-  } else clearInterval(window._ls);
+async function readSheet(f) {
+  const wb = XLSX.read(await f.arrayBuffer(), { type: "array", cellDates: true });
+  let best = [], name = "";
+  wb.SheetNames.forEach(n => {
+    const r = XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: null, raw: true });
+    if (r.length > best.length) { best = r; name = n; }
+  });
+  best.forEach(r => { for (const k in r) { if (isIso(r[k])) r[k] = new Date(r[k]); if (typeof r[k] === "string") r[k] = r[k].trim(); } });
+  return { rows: best, sheet: name };
 }
 
-async function analyze(file, prompt) {
-  if (!CONFIG.WEBHOOK_URL) { await new Promise(r => setTimeout(r, 3500)); return mockResponse(); }
-  const payload = {
-    prompt,
-    file: { name: file.name, type: file.type, size: file.size, base64: await toBase64(file) },
-    sentAt: new Date().toISOString(),
-    source: "flowcraft-ai-web"
+function profile(rows) {
+  const keys = [...new Set(rows.slice(0, 300).flatMap(r => Object.keys(r)))];
+  return keys.map(k => {
+    const vals = rows.map(r => r[k]).filter(v => v !== null && v !== undefined && v !== "");
+    const nD = vals.filter(v => v instanceof Date).length;
+    const nN = vals.filter(v => !(v instanceof Date) && !isNaN(num(v))).length;
+    const uniq = new Set(vals.map(v => v instanceof Date ? +v : String(v))).size;
+    let type = "category";
+    if (!vals.length) type = "empty";
+    else if (nD / vals.length > .8) type = "date";
+    else if (nN / vals.length > .8) type = /(^|\W)(id|no|#)(\W|$)|رقم/i.test(k) && uniq === vals.length ? "id" : "number";
+    const c = { name: k, type, unique: uniq, filled: vals.length };
+    if (type === "number") { const ns = vals.map(num); c.sum = ns.reduce((a, b) => a + b, 0); c.min = Math.min(...ns); c.max = Math.max(...ns); c.avg = c.sum / ns.length; }
+    if (type === "category") { const m = {}; vals.forEach(v => m[v] = (m[v] || 0) + 1); c.top = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0]); }
+    if (type === "date") { const ds = vals.filter(v => v instanceof Date).map(Number); c.from = new Date(Math.min(...ds)).toISOString().slice(0, 10); c.to = new Date(Math.max(...ds)).toISOString().slice(0, 10); }
+    return c;
+  });
+}
+
+/* ---------- الحسابات (دقيقة من الشيت نفسه) ---------- */
+function aggregate(vals, how) {
+  const ns = vals.map(num).filter(n => !isNaN(n));
+  switch (how) {
+    case "avg": return ns.length ? ns.reduce((a, b) => a + b, 0) / ns.length : 0;
+    case "max": return ns.length ? Math.max(...ns) : 0;
+    case "min": return ns.length ? Math.min(...ns) : 0;
+    case "count": return vals.length;
+    default: return ns.reduce((a, b) => a + b, 0);
+  }
+}
+function groupBy(rows, x, y, how, cols, top, isDate) {
+  const xc = cols.find(c => c.name === x);
+  let span = 0;
+  if (xc && xc.type === "date") span = (Date.parse(xc.to) - Date.parse(xc.from)) / 864e5;
+  const keyOf = v => {
+    if (v instanceof Date) { const s = v.toISOString(); return span > 62 ? s.slice(0, 7) : s.slice(0, 10); }
+    return String(v);
   };
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), CONFIG.TIMEOUT_MS);
-  try {
-    const res = await fetch(CONFIG.WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: ctl.signal
-    });
-    if (!res.ok) throw new Error("الخادم رد بكود " + res.status);
-    const txt = await res.text();
-    console.log("RAW n8n response:", txt);
-    try { return JSON.parse(txt); } catch (e) { return { report: txt, _raw: true }; }
-  } finally { clearTimeout(timer); }
+  const m = new Map();
+  rows.forEach(r => { const v = r[x]; if (v === null || v === undefined || v === "") return; const k = keyOf(v); if (!m.has(k)) m.set(k, []); m.get(k).push(y ? r[y] : 1); });
+  let out = [...m].map(([k, a]) => [k, aggregate(a, y ? how : "count")]);
+  if (isDate || (xc && xc.type === "date")) out.sort((a, b) => a[0] < b[0] ? -1 : 1);
+  else { out.sort((a, b) => b[1] - a[1]); out = out.slice(0, top || 10); }
+  return out;
+}
+const fmt = n => Number(n).toLocaleString("ar-EG", { maximumFractionDigits: 2 });
+
+/* ---------- لوحة تلقائية احتياطية لو الذكاء الاصطناعي ما ردش ---------- */
+function autoSpec(cols, nRows) {
+  const nums = cols.filter(c => c.type === "number"), cats = cols.filter(c => c.type === "category" && c.unique > 1 && c.unique <= 60), dates = cols.filter(c => c.type === "date");
+  const pri = [...nums].sort((a, b) => (/sales|total|revenue|amount|مبيعات|إجمالي|اجمالي|المبلغ/i.test(b.name) ? 1 : 0) - (/sales|total|revenue|amount|مبيعات|إجمالي|اجمالي|المبلغ/i.test(a.name) ? 1 : 0));
+  const w = [{ type: "kpi", title: "عدد السجلات", agg: "count" }];
+  pri.slice(0, 3).forEach(c => w.push({ type: "kpi", title: "مجموع " + c.name, y: c.name, agg: "sum" }));
+  if (pri[0]) w.push({ type: "kpi", title: "متوسط " + pri[0].name, y: pri[0].name, agg: "avg" });
+  const m = pri[0] && pri[0].name;
+  dates.slice(0, 1).forEach(d => w.push({ type: "line", title: (m || "العدد") + " عبر الزمن", x: d.name, y: m, agg: m ? "sum" : "count" }));
+  cats.slice(0, 3).forEach((c, i) => w.push({ type: i === 1 && c.unique <= 8 ? "pie" : "bar", title: (m || "العدد") + " حسب " + c.name, x: c.name, y: m, agg: m ? "sum" : "count", top: 10 }));
+  w.push({ type: "table", title: "أول 10 سجلات", columns: cols.filter(c => c.type !== "empty").slice(0, 8).map(c => c.name) });
+  return w;
 }
 
-/* الشكل المتوقع من n8n (Respond to Webhook):
-{
-  "kpis": { "total_sales": 128500, "orders": 1840, "avg_order": 69.8, "profit": 41200 },
-  "report": "نص التحليل...",
-  "recommendations": ["توصية 1", "توصية 2"],
-  "dashboard_url": "https://..."
-}
-بيقبل كمان مصفوفة فيها كائن واحد، أو {output:{...}} */
-function unwrap(d, depth = 0) {
-  if (depth > 4 || d == null) return d || {};
-  if (typeof d === "string") {
-    try { return unwrap(JSON.parse(d.replace(/```json|```/g, "").trim()), depth + 1); } catch (e) { return { report: d }; }
+/* ---------- الرسم ---------- */
+const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
+
+function renderDashboard(spec, rows, cols, meta) {
+  const out = $("#out"); out.innerHTML = ""; charts.forEach(c => c.destroy()); charts = [];
+  const names = new Set(cols.map(c => c.name));
+  const ok = w => w && w.type && (!w.x || names.has(w.x)) && (!w.y || names.has(w.y)) && (w.type !== "table" || (w.columns || []).some(c => names.has(c)));
+  const widgets = spec.filter(ok);
+  const root = el("div", "fade space-y-5");
+
+  const head = el("div", "glass p-5 flex flex-wrap items-center justify-between gap-3");
+  const h = el("div"); h.append(el("h2", "text-2xl font-extrabold grad", "لوحة التحكم"), el("p", "text-sm mut", meta.file + " · " + fmt(rows.length) + " صف · " + cols.length + " عمود" + (meta.ai ? " · مصممة بالذكاء الاصطناعي" : " · لوحة تلقائية")));
+  head.append(h);
+  if (/^https?:\/\//i.test(meta.url)) { const a = el("a", "btn btn-g text-sm", "فتح اللوحة الخارجية ↗"); a.href = meta.url; a.target = "_blank"; a.rel = "noopener noreferrer"; head.append(a); }
+  root.append(head);
+  if (meta.notice) { const n = el("p", "text-sm glass p-3", meta.notice); n.style.color = "#fcd34d"; root.append(n); }
+
+  const kpis = widgets.filter(w => w.type === "kpi");
+  if (kpis.length) {
+    const g = el("div", "grid grid-cols-2 md:grid-cols-4 gap-3");
+    kpis.forEach(w => {
+      const v = w.agg === "distinct" ? new Set(rows.map(r => r[w.x || w.y])).size : aggregate(w.y ? rows.map(r => r[w.y]) : rows, w.agg || "sum");
+      const c = el("div", "glass p-4"); c.append(el("p", "text-xs mut", w.title || w.y), el("p", "text-2xl font-extrabold grad mt-1", fmt(v)));
+      if (w.note) c.append(el("p", "text-xs mut mt-1", w.note));
+      g.append(c);
+    });
+    root.append(g);
   }
-  if (Array.isArray(d)) return unwrap(d[0], depth + 1);
-  if (typeof d === "object" && !d.kpis && !d.report && !d.summary && !d.recommendations && !d.dashboard_url && !d.dashboardUrl) {
-    for (const k of ["output", "json", "data", "body", "response", "text", "message", "content"]) {
-      if (d[k] != null) return unwrap(d[k], depth + 1);
+
+  const grid = el("div", "grid md:grid-cols-2 gap-4");
+  widgets.filter(w => w.type !== "kpi").forEach(w => {
+    const card = el("div", "glass p-4 " + (w.type === "table" || w.size === "full" ? "md:col-span-2" : ""));
+    card.append(el("h3", "font-bold mb-3", w.title || ""));
+    if (w.type === "table") {
+      const cs = (w.columns || []).filter(c => names.has(c)), sc = el("div", "scroll"), t = el("table"), th = el("tr");
+      cs.forEach(c => th.append(el("th", "", c))); t.append(th);
+      let data = rows;
+      if (w.sort && names.has(w.sort)) data = [...rows].sort((a, b) => num(b[w.sort]) - num(a[w.sort]));
+      data.slice(0, w.top || 10).forEach(r => { const tr = el("tr"); cs.forEach(c => tr.append(el("td", "", r[c] instanceof Date ? r[c].toISOString().slice(0, 10) : (r[c] ?? "")))); t.append(tr); });
+      sc.append(t); card.append(sc);
+    } else {
+      const data = groupBy(rows, w.x, w.y, w.agg || "sum", cols, w.top, w.type === "line");
+      const box = el("div", "cbox"), cv = el("canvas"); box.append(cv); card.append(box);
+      const isPie = w.type === "pie" || w.type === "doughnut";
+      const cfg = {
+        type: isPie ? "doughnut" : w.type === "line" ? "line" : "bar",
+        data: { labels: data.map(d => d[0]), datasets: [{ label: w.title, data: data.map(d => d[1]), backgroundColor: isPie ? PAL : (w.type === "line" ? "rgba(16,185,129,.18)" : PAL[0]), borderColor: w.type === "line" ? "#10B981" : "transparent", fill: w.type === "line", tension: .35, borderRadius: 6, pointRadius: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: w.type === "hbar" ? "y" : "x", plugins: { legend: { display: isPie, position: "bottom" } } }
+      };
+      if (w.type === "hbar") cfg.type = "bar";
+      requestAnimationFrame(() => charts.push(new Chart(cv, cfg)));
     }
-  }
+    if (w.note) card.append(el("p", "text-sm mut mt-3", w.note));
+    grid.append(card);
+  });
+  root.append(grid);
+
+  if (meta.report) { const r = el("div", "glass p-6"); r.append(el("h3", "text-lg font-bold mb-2", "تقرير الذكاء الاصطناعي"), el("p", "leading-8", meta.report)); root.append(r); }
+  if (meta.recs.length) { const r = el("div", "glass p-6"); r.append(el("h3", "text-lg font-bold mb-3", "التوصيات")); const ul = el("ul", "space-y-3"); meta.recs.forEach(t => { const li = el("li", "flex gap-2"); li.append(el("span", "", "✅"), el("span", "leading-7", String(t))); ul.append(li); }); r.append(ul); root.append(r); }
+
+  out.append(root); out.classList.remove("hidden"); out.scrollIntoView({ behavior: "smooth" });
+}
+
+/* ---------- الاتصال بـ n8n ---------- */
+function unwrap(d, depth = 0) {
+  if (depth > 4 || d == null) return {};
+  if (typeof d === "string") { try { return unwrap(JSON.parse(d.replace(/```json|```/g, "").trim()), depth + 1); } catch (e) { return { report: d }; } }
+  if (Array.isArray(d)) return unwrap(d[0], depth + 1);
+  if (!d.dashboard_spec && !d.widgets && !d.report && !d.recommendations)
+    for (const k of ["output", "json", "data", "body", "text"]) if (d[k] != null) return unwrap(d[k], depth + 1);
   return d;
 }
-function normalize(d) {
-  d = unwrap(d);
-  return {
-    kpis: d.kpis || {},
-    report: d.report || d.summary || (typeof d.message === "string" ? d.message : ""),
-    recommendations: Array.isArray(d.recommendations) ? d.recommendations : [],
-    url: d.dashboard_url || d.dashboardUrl || ""
-  };
+async function askAI(payload) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), CONFIG.TIMEOUT_MS);
+  try {
+    const res = await fetch(CONFIG.WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: ctl.signal });
+    if (!res.ok) throw new Error("الخادم رد بكود " + res.status);
+    const txt = await res.text(); console.log("RAW n8n response:", txt);
+    let j; try { j = JSON.parse(txt); } catch (e) { j = txt; }
+    return unwrap(j);
+  } finally { clearTimeout(t); }
 }
 
-function mockResponse() {
-  return {
-    kpis: { total_sales: 128500, orders: 1840, avg_order: 69.84, profit: 41200 },
-    report: "المبيعات ارتفعت بشكل واضح في عطلة نهاية الأسبوع، وأعلى فترة طلب بين 8 و11 مساءً. المشروبات الباردة والبرجر الكلاسيك يحققوا أعلى هامش ربح، بينما عدة أصناف حلويات بتبيع قليل ومكلفة في التحضير.",
-    recommendations: [
-      "ركز العروض على المشروبات الباردة لأن هامشها الأعلى.",
-      "زوّد عدد العاملين في فترة 8 إلى 11 مساءً لتقليل وقت الانتظار.",
-      "راجع الأصناف قليلة البيع أو اعمل منها كومبو مع الأكثر مبيعاً."
-    ],
-    url: ""
-  };
+function setLoading(on) {
+  $("#loading").classList.toggle("hidden", !on); $("#send").disabled = on;
+  $("#send").textContent = on ? "جاري التحليل..." : "حلل وابنِ لوحة التحكم ←";
+  clearInterval(window._ls);
+  if (on) { const s = ["بنقرأ الملف", "بنحسب كل الأعمدة", "الذكاء الاصطناعي بيصمم اللوحة", "بنجهز الرسومات"]; let i = 0; window._ls = setInterval(() => $("#loadStep").textContent = s[++i % s.length], 2500); }
 }
 
-const fmt = n => (n === undefined || n === null || n === "") ? "—" : Number(n).toLocaleString("ar-EG", { maximumFractionDigits: 2 });
-
-function renderResults(r) {
-  const box = $("#results");
-  box.innerHTML = "";
-  const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; };
-
-  const wrap = el("div", "fade space-y-5");
-  const grid = el("div", "grid grid-cols-2 md:grid-cols-4 gap-3");
-  [["إجمالي المبيعات", r.kpis.total_sales, "ج.م"], ["عدد الطلبات", r.kpis.orders, ""], ["متوسط قيمة الطلب", r.kpis.avg_order, "ج.م"], ["الأرباح", r.kpis.profit, "ج.م"]]
-    .forEach(([label, val, unit]) => {
-      const c = el("div", "glass p-4");
-      c.append(el("p", "text-xs", label), el("p", "text-2xl font-extrabold grad mt-1", fmt(val)), el("p", "text-xs", unit));
-      c.firstChild.style.color = "var(--muted)";
-      grid.append(c);
-    });
-  wrap.append(grid);
-
-  const rep = el("div", "glass p-6");
-  rep.append(el("h3", "text-lg font-bold mb-2", "تقرير الذكاء الاصطناعي"), el("p", "leading-8", r.report || "لا يوجد تقرير نصي في الرد."));
-  rep.lastChild.style.color = "#cbd5e1";
-  wrap.append(rep);
-
-  if (r.recommendations.length) {
-    const rec = el("div", "glass p-6");
-    rec.append(el("h3", "text-lg font-bold mb-3", "التوصيات"));
-    const ul = el("ul", "space-y-3");
-    r.recommendations.forEach(t => { const li = el("li", "flex gap-2"); li.append(el("span", "", "✅"), el("span", "leading-7", String(t))); ul.append(li); });
-    rec.append(ul); wrap.append(rec);
-  }
-
-  if (/^https?:\/\//i.test(r.url)) {
-    const a = el("a", "btn btn-p w-full", "افتح لوحة التحكم التفاعلية ↗");
-    a.href = r.url; a.target = "_blank"; a.rel = "noopener noreferrer";
-    wrap.append(a);
-  } else {
-    wrap.append(el("p", "text-sm text-center", "لم يرجع رابط Dashboard في هذا الرد."));
-    wrap.lastChild.style.color = "var(--muted)";
-  }
-
-  box.append(wrap);
-  box.classList.remove("hidden");
-  box.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+$("#send").onclick = async () => {
+  $("#err").textContent = "";
+  if (!file) return $("#err").textContent = "ارفع ملف الإكسيل الأول.";
+  setLoading(true);
+  try {
+    const { rows, sheet } = await readSheet(file);
+    if (!rows.length) throw new Error("الشيت فاضي أو مش مقروء.");
+    const cols = profile(rows).filter(c => c.type !== "empty");
+    const prompt = $("#prompt").value.trim() || "اعمل داشبورد شامل لكل بيانات الشيت";
+    const sample = rows.slice(0, CONFIG.SAMPLE_ROWS).map(r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v instanceof Date ? v.toISOString().slice(0, 10) : v])));
+    let ai = {}, notice = "";
+    try { ai = await askAI({ prompt, fileName: file.name, sheet, rowCount: rows.length, columns: cols, sampleRows: sample, source: "flowcraft-ai-web" }); }
+    catch (e) { console.error(e); notice = "تعذر الاتصال بالذكاء الاصطناعي (" + e.message + ")، تم عمل لوحة تلقائية من بياناتك."; }
+    let spec = ai.dashboard_spec || ai.widgets; if (spec && spec.widgets) spec = spec.widgets;
+    if (typeof spec === "string") { try { spec = JSON.parse(spec); } catch (e) { spec = null; } }
+    const aiOk = Array.isArray(spec) && spec.length > 0;
+    if (!aiOk) { spec = autoSpec(cols, rows.length); if (!notice) notice = "الرد من n8n مفيهوش تصميم للوحة (dashboard_spec)، تم عمل لوحة تلقائية."; }
+    renderDashboard(spec, rows, cols, { file: file.name, ai: aiOk, notice, report: ai.report || (typeof ai.message === "string" && ai.dashboard_spec ? ai.message : ""), recs: Array.isArray(ai.recommendations) ? ai.recommendations : [], url: ai.dashboard_url || "" });
+  } catch (e) { console.error(e); $("#err").textContent = "حصلت مشكلة: " + e.message; }
+  finally { setLoading(false); }
+};
 </script>
 </body>
 </html>
