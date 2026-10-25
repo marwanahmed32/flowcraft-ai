@@ -1,63 +1,276 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Turbo Cars | GTA V</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FlowCraft AI — حلل بيانات مطعمك بالذكاء الاصطناعي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#0b0d12;color:#fff;font-family:Arial,sans-serif;padding:24px}
-header{text-align:center;padding:25px 0}
-h1{color:#ff6b22;font-size:36px}
-p{color:#b8bdc9;line-height:1.7}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;max-width:1000px;margin:25px auto}
-.car{background:#171b25;border:1px solid #303747;padding:20px;border-radius:14px}
-.car h2{font-size:20px;direction:ltr;text-align:right}
-button{background:#ff6b22;color:#111;border:0;border-radius:8px;padding:12px;width:100%;font-weight:bold;cursor:pointer}
-#status{max-width:1000px;margin:20px auto;padding:15px;background:#171b25;border-radius:10px}
+:root{--bg:#090D16;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.1);--g:#10B981;--t:#2DD4BF;--muted:#94a3b8}
+html{scroll-behavior:smooth;color-scheme:dark}
+body{background:var(--bg);color:#e8eef7;font-family:Cairo,Inter,system-ui,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(600px 400px at 85% 5%,rgba(16,185,129,.22),transparent),radial-gradient(500px 400px at 5% 60%,rgba(45,212,191,.14),transparent)}
+.glass{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:1.25rem}
+.grad{background:linear-gradient(120deg,var(--g),var(--t));-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.6rem;border-radius:999px;font-weight:700;border:0;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.btn-p{background:linear-gradient(120deg,var(--g),var(--t));color:#04130e;box-shadow:0 10px 30px -10px rgba(16,185,129,.7)}
+.btn-p:hover:not(:disabled){transform:translateY(-2px)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-g{background:var(--card);border:1px solid var(--line);color:#e8eef7}
+.btn-g:hover{border-color:var(--g)}
+.drop{border:2px dashed rgba(16,185,129,.5);transition:all .2s;cursor:pointer}
+.drop.over{background:rgba(16,185,129,.12);border-color:var(--t)}
+.field{width:100%;padding:.85rem 1rem;border-radius:.9rem;background:rgba(255,255,255,.04);border:1px solid var(--line);color:inherit;font-family:inherit}
+.field:focus{outline:2px solid var(--g);outline-offset:1px}
+.spin{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:var(--g);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.chip{border:1px solid var(--line);background:var(--card);padding:.35rem .8rem;border-radius:999px;font-size:.85rem;cursor:pointer}
+.chip:hover{border-color:var(--g)}
+.fade{animation:f .5s ease both}
+@keyframes f{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
 </style>
 </head>
 <body>
-<header>
-<h1>TURBO CARS</h1>
-<p>قائمة السيارات الخارقة — GTA V PS4</p>
+
+<header class="sticky top-0 z-30" style="padding-top:env(safe-area-inset-top,0px)">
+  <nav class="glass mx-3 mt-3 md:mx-auto md:max-w-5xl flex items-center justify-between px-5 py-3">
+    <a href="#top" class="flex items-center gap-2 font-extrabold text-lg" dir="ltr">
+      <span class="w-8 h-8 rounded-lg grid place-items-center text-[#04130e]" style="background:linear-gradient(135deg,var(--g),var(--t))">F</span>
+      FlowCraft <span class="grad">AI</span>
+    </a>
+    <div class="flex gap-2">
+      <a href="#try" class="btn btn-g !py-2 !px-4 text-sm">تواصل معنا</a>
+      <a href="#try" class="btn btn-p !py-2 !px-4 text-sm">تسجيل الدخول</a>
+    </div>
+  </nav>
 </header>
 
-<div class="grid" id="cars"></div>
-<div id="status">الحالة: الصفحة تعمل، لكن الاتصال باللعبة غير مفعّل.</div>
+<main id="top">
+<section class="px-5 pt-16 pb-14 text-center max-w-4xl mx-auto">
+  <p class="inline-block glass px-4 py-1.5 text-sm mb-6" style="color:var(--t)">✦ تحليل ذكي لمطاعم وكافيهات</p>
+  <h1 class="text-4xl sm:text-6xl font-extrabold leading-[1.25]">ارفع ملف الإكسيل، واحصل على <span class="grad">لوحة تحكم</span> بتفهم مطعمك</h1>
+  <p class="mt-5 text-lg max-w-2xl mx-auto" style="color:var(--muted)">اسأل زي ما بتكلم موظفك: «إيه أكتر المنتجات ربحاً؟». الذكاء الاصطناعي يحلل مبيعاتك وطلباتك ويطلعلك أرقام وتوصيات وDashboard تفاعلي في ثواني.</p>
+  <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+    <a href="#try" class="btn btn-p">جرب النظام الآن</a>
+    <a href="#try" class="btn btn-g">ارفع ملفك</a>
+  </div>
+  <div class="mt-12 grid grid-cols-3 gap-3 text-sm">
+    <div class="glass py-4"><b class="block text-2xl grad">+30</b>مؤشر أداء</div>
+    <div class="glass py-4"><b class="block text-2xl grad">&lt; 1 د</b>زمن التحليل</div>
+    <div class="glass py-4"><b class="block text-2xl grad">xlsx</b>و xls مباشرة</div>
+  </div>
+</section>
+
+<!-- UPLOAD + CHAT -->
+<section id="try" class="px-5 py-12 max-w-3xl mx-auto scroll-mt-24">
+  <div class="glass p-5 md:p-8">
+    <h2 class="text-2xl font-bold mb-5">ابدأ التحليل</h2>
+
+    <div id="drop" class="drop rounded-2xl p-8 text-center" tabindex="0" role="button" aria-label="اختر ملف إكسيل">
+      <div class="text-4xl mb-2">📊</div>
+      <p class="font-semibold" id="dropText">اسحب ملف الإكسيل هنا أو اضغط للاختيار</p>
+      <p class="text-sm mt-1" style="color:var(--muted)">.xlsx / .xls — حتى 5 ميجا</p>
+      <input id="file" type="file" accept=".xlsx,.xls" class="hidden">
+    </div>
+
+    <div class="flex flex-wrap gap-2 mt-5" aria-label="أمثلة سريعة">
+      <button class="chip" type="button">اعملي Dashboard للمبيعات</button>
+      <button class="chip" type="button">إيه أكتر المنتجات ربحاً؟</button>
+      <button class="chip" type="button">إيه أوقات الذروة في الطلبات؟</button>
+    </div>
+
+    <textarea id="prompt" rows="3" class="field mt-3" placeholder="اكتب طلبك هنا..."></textarea>
+    <p id="err" class="text-sm mt-2" style="color:#fda4af" role="alert"></p>
+    <button id="send" class="btn btn-p w-full mt-3">إرسال للتحليل ←</button>
+    <p id="mode" class="text-xs mt-3 text-center" style="color:var(--muted)"></p>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading" class="glass p-10 mt-6 text-center hidden" aria-live="polite">
+    <div class="spin mx-auto mb-4"></div>
+    <p class="font-semibold">الذكاء الاصطناعي بيحلل بياناتك...</p>
+    <p class="text-sm mt-1" style="color:var(--muted)" id="loadStep">بنقرأ الملف</p>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="mt-6 hidden"></div>
+</section>
+</main>
+
+<footer class="text-center text-sm py-10" style="color:var(--muted)">© <span id="yr"></span> FlowCraft AI — FlowCraft for AI Automation Engineering</footer>
 
 <script>
-const cars=[
-"Lamborghini Aventador",
-"Bugatti Chiron",
-"Ferrari SF90",
-"Nissan Skyline R34",
-"Toyota Supra MK4"
-];
+/* ============ الإعدادات: ضع رابط الـ Webhook هنا ============ */
+const CONFIG = {
+  WEBHOOK_URL: "",          // مثال: https://your-n8n.app/webhook/flowcraft-analyze
+  MAX_MB: 5,
+  TIMEOUT_MS: 120000        // دقيقتين
+};
+/* لو WEBHOOK_URL فاضي، الموقع بيشتغل في وضع تجريبي ببيانات وهمية */
 
-const grid=document.getElementById("cars");
-const status=document.getElementById("status");
+const $ = s => document.querySelector(s);
+$("#yr").textContent = new Date().getFullYear();
+$("#mode").textContent = CONFIG.WEBHOOK_URL ? "" : "وضع تجريبي: لم يتم ضبط رابط الـ Webhook بعد، النتائج المعروضة وهمية.";
 
-cars.forEach(name=>{
- const card=document.createElement("div");
- card.className="car";
+let selectedFile = null;
+const drop = $("#drop"), fileInput = $("#file");
 
- const title=document.createElement("h2");
- title.textContent=name;
+drop.addEventListener("click", () => fileInput.click());
+drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => setFile(e.dataTransfer.files[0]));
+fileInput.addEventListener("change", () => setFile(fileInput.files[0]));
+document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("#prompt").value = c.textContent; $("#prompt").focus(); }));
 
- const description=document.createElement("p");
- description.textContent="سيارة ضمن قائمة المود.";
+function setFile(f) {
+  $("#err").textContent = "";
+  if (!f) return;
+  if (!/\.(xlsx|xls)$/i.test(f.name)) { $("#err").textContent = "الملف لازم يكون Excel (.xlsx أو .xls)."; return; }
+  if (f.size > CONFIG.MAX_MB * 1024 * 1024) { $("#err").textContent = "حجم الملف أكبر من " + CONFIG.MAX_MB + " ميجا."; return; }
+  selectedFile = f;
+  $("#dropText").textContent = "✓ " + f.name + " (" + (f.size / 1024).toFixed(0) + " KB)";
+}
 
- const button=document.createElement("button");
- button.textContent="اختيار السيارة";
- button.onclick=()=>{
-   status.textContent="تم اختيار "+name+" — اختيار تجريبي فقط، لم يتم استدعاؤها داخل اللعبة.";
- };
-
- card.append(title,description,button);
- grid.appendChild(card);
+const toBase64 = file => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(String(r.result).split(",")[1]);
+  r.onerror = () => rej(new Error("تعذر قراءة الملف"));
+  r.readAsDataURL(file);
 });
+
+$("#send").addEventListener("click", async () => {
+  const prompt = $("#prompt").value.trim();
+  $("#err").textContent = "";
+  if (!selectedFile) { $("#err").textContent = "من فضلك ارفع ملف الإكسيل الأول."; return; }
+  if (!prompt) { $("#err").textContent = "اكتب طلبك أو اختار مثال سريع."; return; }
+
+  setLoading(true);
+  try {
+    const data = await analyze(selectedFile, prompt);
+    renderResults(normalize(data));
+  } catch (e) {
+    console.error(e);
+    $("#err").textContent = e.name === "AbortError" ? "الرد اتأخر. جرب تاني بعد شوية." : "حصلت مشكلة: " + e.message;
+  } finally { setLoading(false); }
+});
+
+function setLoading(on) {
+  $("#loading").classList.toggle("hidden", !on);
+  $("#send").disabled = on;
+  $("#send").textContent = on ? "جاري التحليل..." : "إرسال للتحليل ←";
+  if (on) {
+    $("#results").classList.add("hidden");
+    const steps = ["بنقرأ الملف", "بننضف البيانات", "بنحسب المؤشرات", "بنكتب التوصيات"];
+    let i = 0; clearInterval(window._ls);
+    window._ls = setInterval(() => { $("#loadStep").textContent = steps[++i % steps.length]; }, 2500);
+    $("#loading").scrollIntoView({ behavior: "smooth", block: "center" });
+  } else clearInterval(window._ls);
+}
+
+async function analyze(file, prompt) {
+  if (!CONFIG.WEBHOOK_URL) { await new Promise(r => setTimeout(r, 3500)); return mockResponse(); }
+  const payload = {
+    prompt,
+    file: { name: file.name, type: file.type, size: file.size, base64: await toBase64(file) },
+    sentAt: new Date().toISOString(),
+    source: "flowcraft-ai-web"
+  };
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), CONFIG.TIMEOUT_MS);
+  try {
+    const res = await fetch(CONFIG.WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctl.signal
+    });
+    if (!res.ok) throw new Error("الخادم رد بكود " + res.status);
+    return await res.json();
+  } finally { clearTimeout(timer); }
+}
+
+/* الشكل المتوقع من n8n (Respond to Webhook):
+{
+  "kpis": { "total_sales": 128500, "orders": 1840, "avg_order": 69.8, "profit": 41200 },
+  "report": "نص التحليل...",
+  "recommendations": ["توصية 1", "توصية 2"],
+  "dashboard_url": "https://..."
+}
+بيقبل كمان مصفوفة فيها كائن واحد، أو {output:{...}} */
+function normalize(d) {
+  if (Array.isArray(d)) d = d[0] || {};
+  if (d && d.output && typeof d.output === "object") d = d.output;
+  d = d || {};
+  return {
+    kpis: d.kpis || {},
+    report: d.report || d.summary || "",
+    recommendations: Array.isArray(d.recommendations) ? d.recommendations : [],
+    url: d.dashboard_url || d.dashboardUrl || ""
+  };
+}
+
+function mockResponse() {
+  return {
+    kpis: { total_sales: 128500, orders: 1840, avg_order: 69.84, profit: 41200 },
+    report: "المبيعات ارتفعت بشكل واضح في عطلة نهاية الأسبوع، وأعلى فترة طلب بين 8 و11 مساءً. المشروبات الباردة والبرجر الكلاسيك يحققوا أعلى هامش ربح، بينما عدة أصناف حلويات بتبيع قليل ومكلفة في التحضير.",
+    recommendations: [
+      "ركز العروض على المشروبات الباردة لأن هامشها الأعلى.",
+      "زوّد عدد العاملين في فترة 8 إلى 11 مساءً لتقليل وقت الانتظار.",
+      "راجع الأصناف قليلة البيع أو اعمل منها كومبو مع الأكثر مبيعاً."
+    ],
+    url: ""
+  };
+}
+
+const fmt = n => (n === undefined || n === null || n === "") ? "—" : Number(n).toLocaleString("ar-EG", { maximumFractionDigits: 2 });
+
+function renderResults(r) {
+  const box = $("#results");
+  box.innerHTML = "";
+  const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; };
+
+  const wrap = el("div", "fade space-y-5");
+  const grid = el("div", "grid grid-cols-2 md:grid-cols-4 gap-3");
+  [["إجمالي المبيعات", r.kpis.total_sales, "ج.م"], ["عدد الطلبات", r.kpis.orders, ""], ["متوسط قيمة الطلب", r.kpis.avg_order, "ج.م"], ["الأرباح", r.kpis.profit, "ج.م"]]
+    .forEach(([label, val, unit]) => {
+      const c = el("div", "glass p-4");
+      c.append(el("p", "text-xs", label), el("p", "text-2xl font-extrabold grad mt-1", fmt(val)), el("p", "text-xs", unit));
+      c.firstChild.style.color = "var(--muted)";
+      grid.append(c);
+    });
+  wrap.append(grid);
+
+  const rep = el("div", "glass p-6");
+  rep.append(el("h3", "text-lg font-bold mb-2", "تقرير الذكاء الاصطناعي"), el("p", "leading-8", r.report || "لا يوجد تقرير نصي في الرد."));
+  rep.lastChild.style.color = "#cbd5e1";
+  wrap.append(rep);
+
+  if (r.recommendations.length) {
+    const rec = el("div", "glass p-6");
+    rec.append(el("h3", "text-lg font-bold mb-3", "التوصيات"));
+    const ul = el("ul", "space-y-3");
+    r.recommendations.forEach(t => { const li = el("li", "flex gap-2"); li.append(el("span", "", "✅"), el("span", "leading-7", String(t))); ul.append(li); });
+    rec.append(ul); wrap.append(rec);
+  }
+
+  if (/^https?:\/\//i.test(r.url)) {
+    const a = el("a", "btn btn-p w-full", "افتح لوحة التحكم التفاعلية ↗");
+    a.href = r.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    wrap.append(a);
+  } else {
+    wrap.append(el("p", "text-sm text-center", "لم يرجع رابط Dashboard في هذا الرد."));
+    wrap.lastChild.style.color = "var(--muted)";
+  }
+
+  box.append(wrap);
+  box.classList.remove("hidden");
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 </script>
 </body>
 </html>
