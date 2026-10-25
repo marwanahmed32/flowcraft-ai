@@ -190,7 +190,9 @@ async function analyze(file, prompt) {
       signal: ctl.signal
     });
     if (!res.ok) throw new Error("الخادم رد بكود " + res.status);
-    return await res.json();
+    const txt = await res.text();
+    console.log("RAW n8n response:", txt);
+    try { return JSON.parse(txt); } catch (e) { return { report: txt, _raw: true }; }
   } finally { clearTimeout(timer); }
 }
 
@@ -202,10 +204,21 @@ async function analyze(file, prompt) {
   "dashboard_url": "https://..."
 }
 بيقبل كمان مصفوفة فيها كائن واحد، أو {output:{...}} */
+function unwrap(d, depth = 0) {
+  if (depth > 4 || d == null) return d || {};
+  if (typeof d === "string") {
+    try { return unwrap(JSON.parse(d.replace(/```json|```/g, "").trim()), depth + 1); } catch (e) { return { report: d }; }
+  }
+  if (Array.isArray(d)) return unwrap(d[0], depth + 1);
+  if (typeof d === "object" && !d.kpis && !d.report && !d.summary && !d.recommendations) {
+    for (const k of ["output", "json", "data", "body", "response", "text", "message", "content"]) {
+      if (d[k] != null) return unwrap(d[k], depth + 1);
+    }
+  }
+  return d;
+}
 function normalize(d) {
-  if (Array.isArray(d)) d = d[0] || {};
-  if (d && d.output && typeof d.output === "object") d = d.output;
-  d = d || {};
+  d = unwrap(d);
   return {
     kpis: d.kpis || {},
     report: d.report || d.summary || "",
