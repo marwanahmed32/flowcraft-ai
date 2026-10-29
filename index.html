@@ -1,304 +1,239 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FlowCraft AI — لوحة تحكم ذكية من ملف الإكسيل</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<style>
-:root{--bg:#090D16;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.1);--g:#10B981;--t:#2DD4BF;--muted:#94a3b8}
-html{scroll-behavior:smooth;color-scheme:dark}
-body{background:var(--bg);color:#e8eef7;font-family:Cairo,system-ui,sans-serif;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(600px 400px at 85% 5%,rgba(16,185,129,.22),transparent),radial-gradient(500px 400px at 5% 60%,rgba(45,212,191,.14),transparent)}
-.glass{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:1.25rem}
-.grad{background:linear-gradient(120deg,var(--g),var(--t));-webkit-background-clip:text;background-clip:text;color:transparent}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.6rem;border-radius:999px;font-weight:700;border:0;cursor:pointer;transition:transform .2s}
-.btn-p{background:linear-gradient(120deg,var(--g),var(--t));color:#04130e;box-shadow:0 10px 30px -10px rgba(16,185,129,.7)}
-.btn-p:hover:not(:disabled){transform:translateY(-2px)}
-.btn:disabled{opacity:.55;cursor:not-allowed}
-.btn-g{background:var(--card);border:1px solid var(--line);color:#e8eef7}
-.drop{border:2px dashed rgba(16,185,129,.5);transition:all .2s;cursor:pointer}
-.drop.over{background:rgba(16,185,129,.12);border-color:var(--t)}
-.field{width:100%;padding:.85rem 1rem;border-radius:.9rem;background:rgba(255,255,255,.04);border:1px solid var(--line);color:inherit;font-family:inherit}
-.field:focus{outline:2px solid var(--g);outline-offset:1px}
-.spin{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:var(--g);animation:sp 1s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-.chip{border:1px solid var(--line);background:var(--card);padding:.35rem .8rem;border-radius:999px;font-size:.85rem;cursor:pointer}
-.chip:hover{border-color:var(--g)}
-.fade{animation:f .5s ease both}
-@keyframes f{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.cbox{position:relative;height:260px}
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th,td{padding:.5rem .6rem;text-align:start;border-bottom:1px solid var(--line);white-space:nowrap}
-th{color:var(--t);font-weight:600}
-.scroll{overflow-x:auto}
-.mut{color:var(--muted)}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
-</style>
-</head>
-<body>
-<header class="sticky top-0 z-30" style="padding-top:env(safe-area-inset-top,0px)">
-  <nav class="glass mx-3 mt-3 md:mx-auto md:max-w-5xl flex items-center justify-between px-5 py-3">
-    <a href="#top" class="flex items-center gap-2 font-extrabold text-lg" dir="ltr">
-      <span class="w-8 h-8 rounded-lg grid place-items-center text-[#04130e]" style="background:linear-gradient(135deg,var(--g),var(--t))">F</span>FlowCraft <span class="grad">AI</span>
-    </a>
-    <a href="#try" class="btn btn-p !py-2 !px-4 text-sm">جرب النظام</a>
-  </nav>
-</header>
-
-<main id="top">
-<section class="px-5 pt-14 pb-10 text-center max-w-4xl mx-auto">
-  <p class="inline-block glass px-4 py-1.5 text-sm mb-5" style="color:var(--t)">✦ لوحة تحكم بتتصمم على حسب بياناتك</p>
-  <h1 class="text-4xl sm:text-6xl font-extrabold leading-[1.25]">ارفع الشيت، والذكاء الاصطناعي <span class="grad">يصمم الداشبورد</span></h1>
-  <p class="mt-5 text-lg max-w-2xl mx-auto mut">كل الأرقام بتتحسب من الملف نفسه بدقة، والذكاء الاصطناعي بيختار الرسومات والمؤشرات المناسبة لبياناتك وطلبك، فمفيش شكل ثابت.</p>
-</section>
-
-<section id="try" class="px-5 pb-10 max-w-3xl mx-auto scroll-mt-24">
-  <div class="glass p-5 md:p-8">
-    <div id="drop" class="drop rounded-2xl p-8 text-center" tabindex="0" role="button" aria-label="اختر ملف إكسيل">
-      <div class="text-4xl mb-2">📊</div>
-      <p class="font-semibold" id="dropText">اسحب ملف الإكسيل هنا أو اضغط للاختيار</p>
-      <p class="text-sm mt-1 mut">.xlsx / .xls / .csv — حتى 10 ميجا</p>
-      <input id="file" type="file" accept=".xlsx,.xls,.csv" class="hidden">
-    </div>
-    <div class="flex flex-wrap gap-2 mt-5">
-      <button class="chip" type="button">اعملي Dashboard شامل للمبيعات</button>
-      <button class="chip" type="button">إيه أكتر المنتجات ربحاً؟</button>
-      <button class="chip" type="button">حلل الأداء حسب الوقت</button>
-    </div>
-    <textarea id="prompt" rows="3" class="field mt-3" placeholder="اكتب طلبك هنا... (اختياري، لو فاضي هيعمل داشبورد شامل)"></textarea>
-    <p id="err" class="text-sm mt-2" style="color:#fda4af" role="alert"></p>
-    <button id="send" class="btn btn-p w-full mt-3">حلل وابنِ لوحة التحكم ←</button>
-  </div>
-  <div id="loading" class="glass p-10 mt-6 text-center hidden" aria-live="polite">
-    <div class="spin mx-auto mb-4"></div>
-    <p class="font-semibold">بنحلل الشيت ونصمم اللوحة...</p>
-    <p class="text-sm mt-1 mut" id="loadStep">بنقرأ الملف</p>
-  </div>
-</section>
-
-<section id="out" class="px-4 pb-16 max-w-6xl mx-auto hidden scroll-mt-20"></section>
-</main>
-<footer class="text-center text-sm py-10 mut">© <span id="yr"></span> FlowCraft AI</footer>
-
-<script>
-const CONFIG = { WEBHOOK_URL: "https://mrmrwan.app.n8n.cloud/webhook/flowcraft-api", MAX_MB: 10, TIMEOUT_MS: 120000, SAMPLE_ROWS: 20 };
-const PAL = ["#10B981","#2DD4BF","#34D399","#5EEAD4","#059669","#14B8A6","#6EE7B7","#0D9488","#A7F3D0","#99F6E4"];
-const $ = s => document.querySelector(s);
-$("#yr").textContent = new Date().getFullYear();
-Chart.defaults.color = "#94a3b8"; Chart.defaults.font.family = "Cairo, sans-serif";
-Chart.defaults.borderColor = "rgba(255,255,255,.08)";
-
-let file = null, charts = [];
-const drop = $("#drop"), inp = $("#file");
-drop.onclick = () => inp.click();
-drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inp.click(); } };
-["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
-["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
-drop.addEventListener("drop", e => setFile(e.dataTransfer.files[0]));
-inp.onchange = () => setFile(inp.files[0]);
-document.querySelectorAll(".chip").forEach(c => c.onclick = () => { $("#prompt").value = c.textContent; });
-
-function setFile(f) {
-  $("#err").textContent = "";
-  if (!f) return;
-  if (!/\.(xlsx|xls|csv)$/i.test(f.name)) return $("#err").textContent = "الملف لازم يكون Excel أو CSV.";
-  if (f.size > CONFIG.MAX_MB * 1048576) return $("#err").textContent = "الملف أكبر من " + CONFIG.MAX_MB + " ميجا.";
-  file = f; $("#dropText").textContent = "✓ " + f.name;
-}
-
-/* ---------- قراءة الشيت ---------- */
-const num = v => typeof v === "number" ? v : (typeof v === "string" ? parseFloat(v.replace(/[,\s%$٬]|ج\.م|EGP/gi, "")) : NaN);
-const isIso = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) && !isNaN(Date.parse(v));
-
-async function readSheet(f) {
-  const wb = XLSX.read(await f.arrayBuffer(), { type: "array", cellDates: true });
-  let best = [], name = "";
-  wb.SheetNames.forEach(n => {
-    const r = XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: null, raw: true });
-    if (r.length > best.length) { best = r; name = n; }
-  });
-  best.forEach(r => { for (const k in r) { if (isIso(r[k])) r[k] = new Date(r[k]); if (typeof r[k] === "string") r[k] = r[k].trim(); } });
-  return { rows: best, sheet: name };
-}
-
-function profile(rows) {
-  const keys = [...new Set(rows.slice(0, 300).flatMap(r => Object.keys(r)))];
-  return keys.map(k => {
-    const vals = rows.map(r => r[k]).filter(v => v !== null && v !== undefined && v !== "");
-    const nD = vals.filter(v => v instanceof Date).length;
-    const nN = vals.filter(v => !(v instanceof Date) && !isNaN(num(v))).length;
-    const uniq = new Set(vals.map(v => v instanceof Date ? +v : String(v))).size;
-    let type = "category";
-    if (!vals.length) type = "empty";
-    else if (nD / vals.length > .8) type = "date";
-    else if (nN / vals.length > .8) type = /(^|\W)(id|no|#)(\W|$)|رقم/i.test(k) && uniq === vals.length ? "id" : "number";
-    const c = { name: k, type, unique: uniq, filled: vals.length };
-    if (type === "number") { const ns = vals.map(num); c.sum = ns.reduce((a, b) => a + b, 0); c.min = Math.min(...ns); c.max = Math.max(...ns); c.avg = c.sum / ns.length; }
-    if (type === "category") { const m = {}; vals.forEach(v => m[v] = (m[v] || 0) + 1); c.top = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0]); }
-    if (type === "date") { const ds = vals.filter(v => v instanceof Date).map(Number); c.from = new Date(Math.min(...ds)).toISOString().slice(0, 10); c.to = new Date(Math.max(...ds)).toISOString().slice(0, 10); }
-    return c;
-  });
-}
-
-/* ---------- الحسابات (دقيقة من الشيت نفسه) ---------- */
-function aggregate(vals, how) {
-  const ns = vals.map(num).filter(n => !isNaN(n));
-  switch (how) {
-    case "avg": return ns.length ? ns.reduce((a, b) => a + b, 0) / ns.length : 0;
-    case "max": return ns.length ? Math.max(...ns) : 0;
-    case "min": return ns.length ? Math.min(...ns) : 0;
-    case "count": return vals.length;
-    default: return ns.reduce((a, b) => a + b, 0);
-  }
-}
-function groupBy(rows, x, y, how, cols, top, isDate) {
-  const xc = cols.find(c => c.name === x);
-  let span = 0;
-  if (xc && xc.type === "date") span = (Date.parse(xc.to) - Date.parse(xc.from)) / 864e5;
-  const keyOf = v => {
-    if (v instanceof Date) { const s = v.toISOString(); return span > 62 ? s.slice(0, 7) : s.slice(0, 10); }
-    return String(v);
-  };
-  const m = new Map();
-  rows.forEach(r => { const v = r[x]; if (v === null || v === undefined || v === "") return; const k = keyOf(v); if (!m.has(k)) m.set(k, []); m.get(k).push(y ? r[y] : 1); });
-  let out = [...m].map(([k, a]) => [k, aggregate(a, y ? how : "count")]);
-  if (isDate || (xc && xc.type === "date")) out.sort((a, b) => a[0] < b[0] ? -1 : 1);
-  else { out.sort((a, b) => b[1] - a[1]); out = out.slice(0, top || 10); }
-  return out;
-}
-const fmt = n => Number(n).toLocaleString("ar-EG", { maximumFractionDigits: 2 });
-
-/* ---------- لوحة تلقائية احتياطية لو الذكاء الاصطناعي ما ردش ---------- */
-function autoSpec(cols, nRows) {
-  const nums = cols.filter(c => c.type === "number"), cats = cols.filter(c => c.type === "category" && c.unique > 1 && c.unique <= 60), dates = cols.filter(c => c.type === "date");
-  const pri = [...nums].sort((a, b) => (/sales|total|revenue|amount|مبيعات|إجمالي|اجمالي|المبلغ/i.test(b.name) ? 1 : 0) - (/sales|total|revenue|amount|مبيعات|إجمالي|اجمالي|المبلغ/i.test(a.name) ? 1 : 0));
-  const w = [{ type: "kpi", title: "عدد السجلات", agg: "count" }];
-  pri.slice(0, 3).forEach(c => w.push({ type: "kpi", title: "مجموع " + c.name, y: c.name, agg: "sum" }));
-  if (pri[0]) w.push({ type: "kpi", title: "متوسط " + pri[0].name, y: pri[0].name, agg: "avg" });
-  const m = pri[0] && pri[0].name;
-  dates.slice(0, 1).forEach(d => w.push({ type: "line", title: (m || "العدد") + " عبر الزمن", x: d.name, y: m, agg: m ? "sum" : "count" }));
-  cats.slice(0, 3).forEach((c, i) => w.push({ type: i === 1 && c.unique <= 8 ? "pie" : "bar", title: (m || "العدد") + " حسب " + c.name, x: c.name, y: m, agg: m ? "sum" : "count", top: 10 }));
-  w.push({ type: "table", title: "أول 10 سجلات", columns: cols.filter(c => c.type !== "empty").slice(0, 8).map(c => c.name) });
-  return w;
-}
-
-/* ---------- الرسم ---------- */
-const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
-
-function renderDashboard(spec, rows, cols, meta) {
-  const out = $("#out"); out.innerHTML = ""; charts.forEach(c => c.destroy()); charts = [];
-  const names = new Set(cols.map(c => c.name));
-  const ok = w => w && w.type && (!w.x || names.has(w.x)) && (!w.y || names.has(w.y)) && (w.type !== "table" || (w.columns || []).some(c => names.has(c)));
-  const widgets = spec.filter(ok);
-  const root = el("div", "fade space-y-5");
-
-  const head = el("div", "glass p-5 flex flex-wrap items-center justify-between gap-3");
-  const h = el("div"); h.append(el("h2", "text-2xl font-extrabold grad", "لوحة التحكم"), el("p", "text-sm mut", meta.file + " · " + fmt(rows.length) + " صف · " + cols.length + " عمود" + (meta.ai ? " · مصممة بالذكاء الاصطناعي" : " · لوحة تلقائية")));
-  head.append(h);
-  if (/^https?:\/\//i.test(meta.url)) { const a = el("a", "btn btn-g text-sm", "فتح اللوحة الخارجية ↗"); a.href = meta.url; a.target = "_blank"; a.rel = "noopener noreferrer"; head.append(a); }
-  root.append(head);
-  if (meta.notice) { const n = el("p", "text-sm glass p-3", meta.notice); n.style.color = "#fcd34d"; root.append(n); }
-
-  const kpis = widgets.filter(w => w.type === "kpi");
-  if (kpis.length) {
-    const g = el("div", "grid grid-cols-2 md:grid-cols-4 gap-3");
-    kpis.forEach(w => {
-      const v = w.agg === "distinct" ? new Set(rows.map(r => r[w.x || w.y])).size : aggregate(w.y ? rows.map(r => r[w.y]) : rows, w.agg || "sum");
-      const c = el("div", "glass p-4"); c.append(el("p", "text-xs mut", w.title || w.y), el("p", "text-2xl font-extrabold grad mt-1", fmt(v)));
-      if (w.note) c.append(el("p", "text-xs mut mt-1", w.note));
-      g.append(c);
-    });
-    root.append(g);
-  }
-
-  const grid = el("div", "grid md:grid-cols-2 gap-4");
-  widgets.filter(w => w.type !== "kpi").forEach(w => {
-    const card = el("div", "glass p-4 " + (w.type === "table" || w.size === "full" ? "md:col-span-2" : ""));
-    card.append(el("h3", "font-bold mb-3", w.title || ""));
-    if (w.type === "table") {
-      const cs = (w.columns || []).filter(c => names.has(c)), sc = el("div", "scroll"), t = el("table"), th = el("tr");
-      cs.forEach(c => th.append(el("th", "", c))); t.append(th);
-      let data = rows;
-      if (w.sort && names.has(w.sort)) data = [...rows].sort((a, b) => num(b[w.sort]) - num(a[w.sort]));
-      data.slice(0, w.top || 10).forEach(r => { const tr = el("tr"); cs.forEach(c => tr.append(el("td", "", r[c] instanceof Date ? r[c].toISOString().slice(0, 10) : (r[c] ?? "")))); t.append(tr); });
-      sc.append(t); card.append(sc);
-    } else {
-      const data = groupBy(rows, w.x, w.y, w.agg || "sum", cols, w.top, w.type === "line");
-      const box = el("div", "cbox"), cv = el("canvas"); box.append(cv); card.append(box);
-      const isPie = w.type === "pie" || w.type === "doughnut";
-      const cfg = {
-        type: isPie ? "doughnut" : w.type === "line" ? "line" : "bar",
-        data: { labels: data.map(d => d[0]), datasets: [{ label: w.title, data: data.map(d => d[1]), backgroundColor: isPie ? PAL : (w.type === "line" ? "rgba(16,185,129,.18)" : PAL[0]), borderColor: w.type === "line" ? "#10B981" : "transparent", fill: w.type === "line", tension: .35, borderRadius: 6, pointRadius: 2 }] },
-        options: { responsive: true, maintainAspectRatio: false, indexAxis: w.type === "hbar" ? "y" : "x", plugins: { legend: { display: isPie, position: "bottom" } } }
-      };
-      if (w.type === "hbar") cfg.type = "bar";
-      requestAnimationFrame(() => charts.push(new Chart(cv, cfg)));
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowCraft AI - تحليل بيانات المطاعم والكافيهات</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts (Cairo) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #090D16;
+      color: #F3F4F6;
+      overflow-x: hidden;
     }
-    if (w.note) card.append(el("p", "text-sm mut mt-3", w.note));
-    grid.append(card);
-  });
-  root.append(grid);
 
-  if (meta.report) { const r = el("div", "glass p-6"); r.append(el("h3", "text-lg font-bold mb-2", "تقرير الذكاء الاصطناعي"), el("p", "leading-8", meta.report)); root.append(r); }
-  if (meta.recs.length) { const r = el("div", "glass p-6"); r.append(el("h3", "text-lg font-bold mb-3", "التوصيات")); const ul = el("ul", "space-y-3"); meta.recs.forEach(t => { const li = el("li", "flex gap-2"); li.append(el("span", "", "✅"), el("span", "leading-7", String(t))); ul.append(li); }); r.append(ul); root.append(r); }
+    /* Glassmorphism Effect */
+    .glass-card {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
 
-  out.append(root); out.classList.remove("hidden"); out.scrollIntoView({ behavior: "smooth" });
-}
+    /* Glow Effects */
+    .glow-teal {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+    }
 
-/* ---------- الاتصال بـ n8n ---------- */
-function unwrap(d, depth = 0) {
-  if (depth > 4 || d == null) return {};
-  if (typeof d === "string") { try { return unwrap(JSON.parse(d.replace(/```json|```/g, "").trim()), depth + 1); } catch (e) { return { report: d }; } }
-  if (Array.isArray(d)) return unwrap(d[0], depth + 1);
-  if (!d.dashboard_spec && !d.widgets && !d.report && !d.recommendations)
-    for (const k of ["output", "json", "data", "body", "text"]) if (d[k] != null) return unwrap(d[k], depth + 1);
-  return d;
-}
-async function askAI(payload) {
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), CONFIG.TIMEOUT_MS);
-  try {
-    const res = await fetch(CONFIG.WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: ctl.signal });
-    if (!res.ok) throw new Error("الخادم رد بكود " + res.status);
-    const txt = await res.text(); console.log("RAW n8n response:", txt);
-    let j; try { j = JSON.parse(txt); } catch (e) { j = txt; }
-    return unwrap(j);
-  } finally { clearTimeout(t); }
-}
+    .bg-gradient-glow {
+      background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15) 0%, rgba(9, 13, 22, 0) 70%);
+    }
 
-function setLoading(on) {
-  $("#loading").classList.toggle("hidden", !on); $("#send").disabled = on;
-  $("#send").textContent = on ? "جاري التحليل..." : "حلل وابنِ لوحة التحكم ←";
-  clearInterval(window._ls);
-  if (on) { const s = ["بنقرأ الملف", "بنحسب كل الأعمدة", "الذكاء الاصطناعي بيصمم اللوحة", "بنجهز الرسومات"]; let i = 0; window._ls = setInterval(() => $("#loadStep").textContent = s[++i % s.length], 2500); }
-}
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090D16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1F2937;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #10B981;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-gradient-glow">
 
-$("#send").onclick = async () => {
-  $("#err").textContent = "";
-  if (!file) return $("#err").textContent = "ارفع ملف الإكسيل الأول.";
-  setLoading(true);
-  try {
-    const { rows, sheet } = await readSheet(file);
-    if (!rows.length) throw new Error("الشيت فاضي أو مش مقروء.");
-    const cols = profile(rows).filter(c => c.type !== "empty");
-    const prompt = $("#prompt").value.trim() || "اعمل داشبورد شامل لكل بيانات الشيت";
-    const sample = rows.slice(0, CONFIG.SAMPLE_ROWS).map(r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v instanceof Date ? v.toISOString().slice(0, 10) : v])));
-    let ai = {}, notice = "";
-    try { ai = await askAI({ prompt, fileName: file.name, sheet, rowCount: rows.length, columns: cols, sampleRows: sample, source: "flowcraft-ai-web" }); }
-    catch (e) { console.error(e); notice = "تعذر الاتصال بالذكاء الاصطناعي (" + e.message + ")، تم عمل لوحة تلقائية من بياناتك."; }
-    let spec = ai.dashboard_spec || ai.widgets; if (spec && spec.widgets) spec = spec.widgets;
-    if (typeof spec === "string") { try { spec = JSON.parse(spec); } catch (e) { spec = null; } }
-    const aiOk = Array.isArray(spec) && spec.length > 0;
-    if (!aiOk) { spec = autoSpec(cols, rows.length); if (!notice) notice = "الرد من n8n مفيهوش تصميم للوحة (dashboard_spec)، تم عمل لوحة تلقائية."; }
-    renderDashboard(spec, rows, cols, { file: file.name, ai: aiOk, notice, report: ai.report || (typeof ai.message === "string" && ai.dashboard_spec ? ai.message : ""), recs: Array.isArray(ai.recommendations) ? ai.recommendations : [], url: ai.dashboard_url || "" });
-  } catch (e) { console.error(e); $("#err").textContent = "حصلت مشكلة: " + e.message; }
-  finally { setLoading(false); }
-};
-</script>
+  <!-- Header -->
+  <header class="w-full border-b border-gray-800/60 backdrop-blur-md sticky top-0 z-50 bg-[#090D16]/80">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-black text-xl shadow-lg shadow-emerald-500/20">
+          FC
+        </div>
+        <span class="text-xl font-extrabold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-emerald-400">
+          FlowCraft AI
+        </span>
+      </div>
+      <a href="https://github.com/marwanahmed32/flowcraft-ai" target="_blank" class="text-sm font-semibold text-gray-400 hover:text-emerald-400 transition-colors">
+        GitHub Repository ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-12 flex-1 w-full flex flex-col gap-12">
+    
+    <!-- Hero Section -->
+    <section class="text-center space-y-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        مُحرك التحليل الذكي للمطاعم v2.0
+      </div>
+      <h1 class="text-4xl md:text-6xl font-black text-white leading-tight">
+        حوّل بيانات مطعمك إلى <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-200">قرارات أرباح</span>
+      </h1>
+      <p class="text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
+        ارفع ملف المبيعات (Excel) واكتب استفسارك، وسيستخرج الذكاء الاصطناعي الأرقام والتقارير في ثوانٍ.
+      </p>
+    </section>
+
+    <!-- Upload & Form Card -->
+    <section class="glass-card rounded-3xl p-6 md:p-8 glow-teal">
+      <form id="analytics-form" class="space-y-6">
+        
+        <!-- Drag & Drop / File Input -->
+        <div class="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-2xl p-6 text-center bg-gray-900/40 transition-all group cursor-pointer relative">
+          <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".xlsx, .xls, .csv">
+          <div class="flex flex-col items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-gray-200" id="file-label">اسحب وأسقط ملف الإكسيل هنا أو اضغط للاختيار</p>
+              <p class="text-xs text-gray-500 mt-1">يدعم صيغ .XLSX, .XLS, .CSV</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Query Input -->
+        <div>
+          <label for="query-input" class="block text-sm font-semibold text-gray-300 mb-2">ما الذي تريد تحليله في هذا الملف؟</label>
+          <textarea id="query-input" rows="3" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl p-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors text-sm" placeholder="مثال: احسب إجمالي المبيعات، الطلبات، وأكثر المنتجات مبيعات خلال هذا الشهر..."></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="submit-btn" class="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black text-base transition-all transform active:scale-[0.99] shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+          <span>إرسال وتحليل البيانات</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+      </form>
+    </section>
+
+    <!-- Dynamic Metrics Section (KPI Cards) -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="glass-card rounded-2xl p-5 text-center">
+        <p class="text-xs text-gray-400 mb-1">إجمالي المبيعات</p>
+        <p class="text-xl md:text-2xl font-extrabold text-emerald-400" id="stat-sales">—</p>
+      </div>
+      <div class="glass-card rounded-2xl p-5 text-center">
+        <p class="text-xs text-gray-400 mb-1">عدد الطلبات</p>
+        <p class="text-xl md:text-2xl font-extrabold text-teal-400" id="stat-orders">—</p>
+      </div>
+      <div class="glass-card rounded-2xl p-5 text-center">
+        <p class="text-xs text-gray-400 mb-1">متوسط قيمة الطلب</p>
+        <p class="text-xl md:text-2xl font-extrabold text-cyan-400" id="stat-avg">—</p>
+      </div>
+      <div class="glass-card rounded-2xl p-5 text-center">
+        <p class="text-xs text-gray-400 mb-1">الأرباح الصافية</p>
+        <p class="text-xl md:text-2xl font-extrabold text-emerald-300" id="stat-profit">—</p>
+      </div>
+    </section>
+
+    <!-- AI Insights & Report Section -->
+    <section class="glass-card rounded-2xl p-6 md:p-8 space-y-4">
+      <div class="flex items-center gap-3 border-b border-gray-800 pb-4">
+        <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
+        <h2 class="text-lg font-bold text-white">تقرير وتوصيات الذكاء الاصطناعي</h2>
+      </div>
+      <div id="ai-report" class="text-gray-300 leading-relaxed text-sm md:text-base min-h-[80px]">
+        لا يوجد تقرير نصي حتى الآن. يرجى إرسال ملف وطلب للبدء.
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full border-t border-gray-800/60 py-6 text-center text-xs text-gray-500">
+    <p>© 2026 FlowCraft AI - Developed by Marwan Ahmed</p>
+  </footer>
+
+  <!-- Script Code Integration -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('analytics-form');
+      const fileInput = document.getElementById('file-input');
+      const fileLabel = document.getElementById('file-label');
+      const queryInput = document.getElementById('query-input');
+      const submitBtn = document.getElementById('submit-btn');
+
+      // رابط الـ Webhook بتاع n8n
+      const N8N_WEBHOOK_URL = 'https://marwanahmed32.github.io/flowcraft-ai/'; // استبدله برابط الـ Production Webhook المباشر من n8n
+
+      // تغيير اسم الملف عند اختياره
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          fileLabel.innerText = `الملف المختار: ${e.target.files[0].name}`;
+          fileLabel.classList.add('text-emerald-400');
+        }
+      });
+
+      // إرسال البيانات للـ Webhook
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const userQuery = queryInput.value.trim() || 'تحليل بيانات المطعم الشاملة';
+        const selectedFile = fileInput.files.length > 0 ? fileInput.files[0] : null;
+
+        // حالة التحميل (Loading State)
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <svg class="animate-spin h-5 w-5 text-black inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg> جاري المعالجة بالذكاء الاصطناعي...`;
+
+        try {
+          const payload = {
+            file_name: selectedFile ? selectedFile.name : 'no_file',
+            query: userQuery,
+            timestamp: new Date().toISOString()
+          };
+
+          const response = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`خطأ في السيرفر: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('RAW n8n response:', data);
+
+          // تحديث الواجهة بالأرقام والتقرير الديناميكي
+          if (data.status === 'success' || data.total_sales) {
+            document.getElementById('stat-sales').innerText = data.total_sales || '—';
+            document.getElementById('stat-orders').innerText = data.total_orders || '—';
+            document.getElementById('stat-avg').innerText = data.avg_order_value || '—';
+            document.getElementById('stat-profit').innerText = data.net_profit || '—';
+            
+            document.getElementById('ai-report').innerText = data.analysis || 'تمت المعالجة بنجاح.';
+          }
+
+        } catch (error) {
+          console.error('Fetch Error:', error);
+          alert('حدث خطأ في الاتصال بالسيرفر. تأكد من تفعيل الـ Workflow في n8n وضبط رابط الـ Webhook.');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHTML;
+        }
+      });
+    });
+  </script>
 </body>
 </html>
