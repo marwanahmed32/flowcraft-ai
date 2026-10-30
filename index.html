@@ -51,6 +51,17 @@ textarea:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid va
 .chart h3{margin:0 0 10px;font:500 16px "Readex Pro",sans-serif}.chart div{position:relative;height:280px}
 footer{border-top:1px solid var(--grid);padding:24px 0;color:var(--muted);text-align:center;font-size:14px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+.ans{display:none;margin:0 0 16px;padding:18px 20px;background:var(--green-s);border-inline-start:4px solid var(--green);border-radius:10px}
+.ans:not(:empty){display:block}.ans p{margin:6px 0 0}.ans .sub{color:var(--muted);font-size:15px}
+.chart small{display:block;margin-top:8px;color:var(--muted);font-size:14px}
+#rep{margin-top:14px}.blk{margin-top:24px}.blk h3{font:500 20px "Readex Pro",sans-serif;margin:0 0 10px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.find{background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:14px 16px}
+.find b{font:700 26px "Readex Pro",sans-serif;color:var(--green)}.find h4{margin:0;font-size:17px}.find p{margin:6px 0 0;color:var(--muted);font-size:15px;line-height:1.7}
+.blk ul{margin:0;padding-inline-start:20px}
+.act{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--grid)}.act p{margin:0}.act small{color:var(--muted)}
+.tag{flex:none;padding:2px 12px;border-radius:99px;font-size:13px;font-weight:600;background:var(--green-s);color:var(--green)}
+.tag.high{background:var(--amber);color:#14201B}.tag.low{background:var(--grid);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -70,77 +81,106 @@ footer{border-top:1px solid var(--grid);padding:24px 0;color:var(--muted);text-a
 <div class="chips"><button class="chip" type="button">اعملي Dashboard شامل للمبيعات</button><button class="chip" type="button">إيه أكتر المنتجات ربحاً؟</button><button class="chip" type="button">حلل الأداء حسب الوقت</button></div>
 <button class="go" id="go" type="button">حلل وابنِ لوحة التحكم</button>
 <div id="msg" role="status"></div></div>
-<div id="out"><p id="sum" style="margin:0 0 16px;max-width:60em"></p><div class="kpis" id="kpis"></div><div class="charts" id="charts"></div></div>
+<div id="out"><div id="sum" class="ans"></div><div class="kpis" id="kpis"></div><div class="charts" id="charts"></div><div id="rep"></div></div>
 </div></section>
 <footer>© FlowCraft AI</footer>
 
 <script>
-const $=s=>document.querySelector(s);// ضع هنا رابط الـ Webhook بتاع n8n (Production URL). لو سيبته فاضي هيشتغل التحليل المحلي البسيط.
+// ===== حط هنا رابط الـ Webhook بتاع n8n (Production URL) =====
+// مثال: https://YOUR-N8N-HOST/webhook/flowcraft-api
 const WEBHOOK_URL="https://mrmrwan.app.n8n.cloud/webhook/flowcraft-api";
-let rows=[],charts=[],curFile=null;
-const fmt=n=>Math.abs(n)>=1e6?(n/1e6).toFixed(2)+"M":Math.abs(n)>=1e3?(n/1e3).toFixed(1)+"K":(+n.toFixed(2)).toLocaleString("en");
+const $=s=>document.querySelector(s),css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"],PR={high:"أولوية عالية",medium:"أولوية متوسطة",low:"أولوية منخفضة"};
+const PAL=["#1D6F42","#C98200","#2E86AB","#A23B72","#6C757D","#4CC183","#F18F01","#7B2CBF"];
+const r2=n=>Math.round(n*100)/100,fmt=n=>Math.abs(n)>=1e6?(n/1e6).toFixed(2)+"M":Math.abs(n)>=1e3?(n/1e3).toFixed(1)+"K":(+n.toFixed(2)).toLocaleString("en");
+let rows=[],cols=[],charts=[],curFile=null;
 const msg=(t,e)=>{$("#msg").textContent=t;$("#msg").className=e?"e":""};
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("#ask").value=c.textContent});
+const mm=a=>a.reduce((o,x)=>({lo:Math.min(o.lo,x),hi:Math.max(o.hi,x)}),{lo:Infinity,hi:-Infinity});
+function profile(){
+ cols=Object.keys(rows[0]).map(name=>{
+  const v=rows.map(r=>r[name]).filter(x=>x!=null&&x!==""),n=v.filter(x=>typeof x==="number"),d=v.filter(x=>x instanceof Date),c={name,type:"text",filled:v.length};
+  if(!v.length)return c;
+  if(d.length/v.length>.8){c.type="date";const t=mm(d.map(x=>+x));c.from=new Date(t.lo).toISOString().slice(0,10);c.to=new Date(t.hi).toISOString().slice(0,10)}
+  else if(n.length/v.length>.8){const u=new Set(n).size;c.type=(u===n.length&&/id|رقم|كود|code/i.test(name))?"id":"number";
+   if(c.type==="number"){c.sum=r2(n.reduce((s,x)=>s+x,0));c.avg=r2(c.sum/n.length);const t=mm(n);c.min=t.lo;c.max=t.hi}}
+  else{const u=new Set(v.map(String)).size;if(u>1&&u<=60){c.type="category";c.unique=u}}
+  return c})}
+function group(x,y,agg){
+ const dc=cols.find(c=>c.type==="date"),t=new Map();
+ rows.forEach(r=>{let k;
+  if(x==="__weekday"){const d=dc&&r[dc.name];if(!(d instanceof Date))return;k=d.getDay()}
+  else{const v=r[x];if(v==null||v==="")return;k=v instanceof Date?v.toISOString().slice(0,7):String(v)}
+  const val=y?+r[y]:1;if(isNaN(val))return;
+  const o=t.get(k)||{s:0,n:0,mx:-Infinity,mn:Infinity};o.s+=val;o.n++;o.mx=Math.max(o.mx,val);o.mn=Math.min(o.mn,val);t.set(k,o)});
+ return [...t].map(([k,o])=>({k,v:agg==="avg"?o.s/o.n:agg==="count"?o.n:agg==="max"?o.mx:agg==="min"?o.mn:o.s}))}
+function digest(){
+ const nums=cols.filter(c=>c.type==="number"),cats=cols.filter(c=>c.type==="category"),dc=cols.find(c=>c.type==="date"),D={rows:rows.length,totals:{},byCategory:{}};
+ const tb=g=>{const s=[...g].sort((a,b)=>b.v-a.v);return{top:s.slice(0,10).map(o=>[o.k,r2(o.v)]),bottom:s.slice(-3).map(o=>[o.k,r2(o.v)])}};
+ nums.forEach(c=>D.totals[c.name]={sum:c.sum,avg:c.avg,min:c.min,max:c.max});
+ cats.slice(0,6).forEach(c=>{const o=D.byCategory[c.name]={"عدد السجلات":tb(group(c.name,null,"count"))};nums.slice(0,4).forEach(n=>{o[n.name]=tb(group(c.name,n.name,"sum"))})});
+ if(dc){D.dateRange=[dc.from,dc.to];D.byMonth={};D.byWeekday={};
+  nums.slice(0,4).forEach(n=>{D.byMonth[n.name]=group(dc.name,n.name,"sum").sort((a,b)=>a.k<b.k?-1:1).slice(-36).map(o=>[o.k,r2(o.v)]);
+   D.byWeekday[n.name]=group("__weekday",n.name,"sum").sort((a,b)=>a.k-b.k).map(o=>[DAYS[o.k],r2(o.v)])})}
+ return D}
 async function load(f){
  if(!f)return;curFile=f;
  if(f.size>10*1024*1024){msg("الملف أكبر من 10 ميجا، قلل حجمه وجرب تاني.",1);return}
  try{const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});
   rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+  if(rows.length)profile();
   $("#fname").textContent=f.name+" — "+rows.length+" صف";
   msg(rows.length?"الملف جاهز. اكتب طلبك أو اضغط تحليل.":"الشيت فاضي، اختار ملف فيه بيانات.",!rows.length)
  }catch(e){rows=[];msg("مش قادر أقرأ الملف. اتأكد إنه xlsx أو xls أو csv سليم.",1)}}
 $("#file").onchange=e=>load(e.target.files[0]);
-const d=$("#drop");["dragover","dragenter"].forEach(v=>d.addEventListener(v,e=>{e.preventDefault();d.classList.add("on")}));
-["dragleave","drop"].forEach(v=>d.addEventListener(v,e=>{e.preventDefault();d.classList.remove("on")}));
-d.addEventListener("drop",e=>load(e.dataTransfer.files[0]));
-function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
-function mk(title,cfg){const w=document.createElement("div");w.className="chart";w.innerHTML="<h3></h3><div><canvas></canvas></div>";
- w.querySelector("h3").textContent=title;$("#charts").appendChild(w);
- charts.push(new Chart(w.querySelector("canvas"),cfg))}
-const PAL=["#1D6F42","#C98200","#2E86AB","#A23B72","#6C757D","#4CC183","#F18F01","#7B2CBF"];
-async function remote(){
- const b=$("#go");b.disabled=true;msg("بنحلل الشيت ونصمم اللوحة...");
- charts.forEach(c=>c.destroy());charts=[];$("#kpis").innerHTML="";$("#charts").innerHTML="";$("#sum").textContent="";
- try{
-  const fd=new FormData();fd.append("file",curFile);fd.append("prompt",$("#ask").value.trim());
-  const r=await fetch(WEBHOOK_URL,{method:"POST",body:fd});
-  if(!r.ok)throw new Error("HTTP "+r.status);
-  let data=await r.json();if(Array.isArray(data))data=data[0];if(data&&data.output&&typeof data.output==="object")data=data.output;
-  const mu=css("--muted"),gr=css("--grid");Chart.defaults.font.family='"IBM Plex Sans Arabic",sans-serif';Chart.defaults.color=mu;
-  $("#sum").textContent=data.summary||"";
-  (data.kpis||[]).forEach(k=>{const e=document.createElement("div");e.className="kpi";e.innerHTML="<small></small><b></b>";e.children[0].textContent=k.label;e.children[1].textContent=k.value;$("#kpis").appendChild(e)});
-  (data.charts||[]).forEach(c=>{const t=c.type||"bar",round=t==="pie"||t==="doughnut";
-   mk(c.title||"",{type:t,data:{labels:c.labels,datasets:[{data:c.values,backgroundColor:round||t==="bar"?(round?PAL:PAL[0]):PAL[1],borderColor:PAL[1],tension:.3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:round}},scales:round?{}:{x:{grid:{color:gr}},y:{grid:{color:gr},beginAtZero:true}}}})});
-  $("#out").style.display="block";msg("تم التحليل.");$("#out").scrollIntoView({behavior:"smooth"});
- }catch(e){msg("حصلت مشكلة في الاتصال بالـ Workflow ("+e.message+"). اتأكد إنه شغال وإن CORS متفعّل.",1)}
- b.disabled=false}
+const dz=$("#drop");["dragover","dragenter"].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.add("on")}));
+["dragleave","drop"].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.remove("on")}));
+dz.addEventListener("drop",e=>load(e.dataTransfer.files[0]));
+function mk(title,cfg,note){const w=el("div","chart");w.appendChild(el("h3",null,title));const h=el("div");h.appendChild(document.createElement("canvas"));w.appendChild(h);
+ if(note)w.appendChild(el("small",null,note));$("#charts").appendChild(w);charts.push(new Chart(w.querySelector("canvas"),cfg))}
+const num=n=>cols.find(c=>c.name===n&&c.type==="number");
+function widget(w){
+ const agg=w.agg||"sum";
+ if(w.type==="kpi"){let v;if(agg==="count")v=rows.length;else{const c=num(w.y);if(!c)return;v=c[agg==="avg"?"avg":agg==="max"?"max":agg==="min"?"min":"sum"]}
+  const k=el("div","kpi");k.appendChild(el("small",null,w.title||w.y||""));k.appendChild(el("b",null,fmt(v)));$("#kpis").appendChild(k);return}
+ const wk=w.x==="__weekday",xc=cols.find(c=>c.name===w.x);
+ if(!wk&&!xc)return;if(wk&&!cols.some(c=>c.type==="date"))return;if(w.y&&!num(w.y))return;if(!w.y&&agg!=="count")return;
+ const isT=wk||xc.type==="date",pie=w.type==="pie",line=w.type==="line";
+ if(line&&!isT)return;
+ let g=group(w.x,w.y,agg);
+ if(isT)g.sort((p,q)=>wk?p.k-q.k:(p.k<q.k?-1:1));else{g.sort((p,q)=>q.v-p.v);g=g.slice(0,pie?6:(w.top||10))}
+ const gr=css("--grid");
+ mk(w.title||"",{type:pie?"doughnut":line?"line":"bar",data:{labels:g.map(o=>wk?DAYS[o.k]:o.k),datasets:[{data:g.map(o=>r2(o.v)),backgroundColor:pie?PAL:line?PAL[1]:PAL[0],borderColor:PAL[1],borderRadius:line?0:4,tension:.3}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:w.type==="hbar"?"y":"x",plugins:{legend:{display:pie,position:"bottom"}},scales:pie?{}:{x:{grid:{color:gr}},y:{grid:{color:gr},beginAtZero:true}}}},w.note)}
+function section(p,t){const s=el("section","blk");s.appendChild(el("h3",null,t));p.appendChild(s);return s}
+function list(p,a){const u=el("ul");a.forEach(x=>u.appendChild(el("li",null,x)));p.appendChild(u)}
+const has=a=>Array.isArray(a)&&a.length;
+function render(d){
+ charts.forEach(c=>c.destroy());charts=[];["#kpis","#charts","#rep","#sum"].forEach(s=>$(s).replaceChildren());
+ Chart.defaults.font.family='"IBM Plex Sans Arabic",sans-serif';Chart.defaults.color=css("--muted");
+ const a=d.analysis||{},S=$("#sum");
+ if(d.answer){S.appendChild(el("b",null,"الإجابة على طلبك"));S.appendChild(el("p",null,d.answer))}
+ const ex=a.executive_summary||d.report;if(ex)S.appendChild(el("p","sub",ex));
+ (((d.dashboard_spec||{}).widgets)||[]).forEach(w=>{try{widget(w)}catch(e){}});
+ const R=$("#rep");
+ if(has(a.key_findings)){const s=section(R,"أهم النتائج"),g=el("div","grid3");a.key_findings.forEach(f=>{const c=el("div","find");c.appendChild(el("b",null,f.metric||""));c.appendChild(el("h4",null,f.title||""));c.appendChild(el("p",null,f.detail||""));g.appendChild(c)});s.appendChild(g)}
+ if(has(a.risks)||has(a.opportunities)){const g=el("div","grid2");R.appendChild(g);[["المخاطر",a.risks],["الفرص",a.opportunities]].forEach(([t,x])=>{if(has(x))list(section(g,t),x)})}
+ if(has(a.actions)){const s=section(R,"خطة التنفيذ");a.actions.forEach(x=>{const r=el("div","act");r.appendChild(el("span","tag "+x.priority,PR[x.priority]||x.priority||""));const t=el("div");t.appendChild(el("p",null,x.action));if(x.expected_impact)t.appendChild(el("small",null,"الأثر المتوقع: "+x.expected_impact));r.appendChild(t);s.appendChild(r)})}
+ else if(has(d.recommendations))list(section(R,"أهم التوصيات"),d.recommendations)}
 $("#go").onclick=async()=>{
  if(!rows.length){msg("اختار ملف الأول.",1);return}
- if(WEBHOOK_URL){await remote();return}
- local()};
-function local(){
- charts.forEach(c=>c.destroy());charts=[];$("#kpis").innerHTML="";$("#charts").innerHTML="";
- const cols=Object.keys(rows[0]),g=css("--green"),am=css("--amber"),gr=css("--grid"),mu=css("--muted");
- Chart.defaults.font.family='"IBM Plex Sans Arabic",sans-serif';Chart.defaults.color=mu;
- const num=cols.filter(c=>{const v=rows.map(r=>r[c]).filter(x=>x!=null);return v.length&&v.filter(x=>typeof x==="number").length/v.length>.8});
- const dat=cols.find(c=>rows.some(r=>r[c] instanceof Date));
- const cat=cols.filter(c=>!num.includes(c)&&c!==dat).find(c=>{const u=new Set(rows.map(r=>r[c]));return u.size>1&&u.size<=40});
- const add=(l,v)=>{const k=document.createElement("div");k.className="kpi";k.innerHTML="<small></small><b></b>";k.children[0].textContent=l;k.children[1].textContent=v;$("#kpis").appendChild(k)};
- add("عدد الصفوف",rows.length.toLocaleString("en"));
- num.slice(0,3).forEach(c=>{const s=rows.reduce((a,r)=>a+(+r[c]||0),0);add("إجمالي "+c,fmt(s));});
- const m=num[0];
- if(!m){msg("مفيش أعمدة أرقام في الشيت، فمقدرتش أبني رسومات.",1);$("#out").style.display="block";return}
- const opt=(x)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gr}},y:{grid:{color:gr},beginAtZero:true}},...x});
- if(cat){const t={};rows.forEach(r=>{const k=r[cat]??"—";t[k]=(t[k]||0)+(+r[m]||0)});
-  const e=Object.entries(t).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  mk(m+" حسب "+cat,{type:"bar",data:{labels:e.map(x=>x[0]),datasets:[{data:e.map(x=>x[1]),backgroundColor:g,borderRadius:4}]},options:opt({indexAxis:"y"})});}
- if(dat){const t={};rows.forEach(r=>{const v=r[dat];if(v instanceof Date){const k=v.getFullYear()+"-"+String(v.getMonth()+1).padStart(2,"0");t[k]=(t[k]||0)+(+r[m]||0)}});
-  const e=Object.entries(t).sort();
-  mk(m+" عبر الوقت",{type:"line",data:{labels:e.map(x=>x[0]),datasets:[{data:e.map(x=>x[1]),borderColor:am,backgroundColor:am,tension:.3,pointRadius:3}]},options:opt({})});}
- if(num[1]){const s=rows.slice(0,200);
-  mk(num[1]+" مقابل "+m,{type:"scatter",data:{datasets:[{data:s.map(r=>({x:+r[m]||0,y:+r[num[1]]||0})),backgroundColor:g}]},options:opt({})});}
- $("#out").style.display="block";msg("تم التحليل.");$("#out").scrollIntoView({behavior:"smooth"})};
+ if(!WEBHOOK_URL){msg("رابط الـ Webhook لسه ما اتحطش في الملف (WEBHOOK_URL).",1);return}
+ const b=$("#go");b.disabled=true;msg("بنحلل الشيت ونصمم اللوحة... ممكن ياخد لحد دقيقة.");
+ try{
+  const body={prompt:$("#ask").value.trim()||"اعملي Dashboard شامل مع تحليل كامل",fileName:curFile.name,rowCount:rows.length,columns:cols,digest:digest(),sampleRows:rows.slice(0,8)};
+  const r=await fetch(WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  let d=await r.json();if(Array.isArray(d))d=d[0];
+  if(!d||(!d.answer&&!d.analysis&&!d.dashboard_spec&&!d.report))throw new Error("الرد فاضي");
+  render(d);$("#out").style.display="block";msg("تم التحليل.");$("#out").scrollIntoView({behavior:"smooth"})
+ }catch(e){msg("حصلت مشكلة مع الـ Workflow ("+e.message+"). اتأكد إنه Active وإن الرابط هو الـ Production URL.",1)}
+ b.disabled=false};
 </script>
 </body>
 </html>
