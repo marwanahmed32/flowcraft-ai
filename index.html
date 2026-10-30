@@ -70,17 +70,19 @@ footer{border-top:1px solid var(--grid);padding:24px 0;color:var(--muted);text-a
 <div class="chips"><button class="chip" type="button">اعملي Dashboard شامل للمبيعات</button><button class="chip" type="button">إيه أكتر المنتجات ربحاً؟</button><button class="chip" type="button">حلل الأداء حسب الوقت</button></div>
 <button class="go" id="go" type="button">حلل وابنِ لوحة التحكم</button>
 <div id="msg" role="status"></div></div>
-<div id="out"><div class="kpis" id="kpis"></div><div class="charts" id="charts"></div></div>
+<div id="out"><p id="sum" style="margin:0 0 16px;max-width:60em"></p><div class="kpis" id="kpis"></div><div class="charts" id="charts"></div></div>
 </div></section>
 <footer>© FlowCraft AI</footer>
 
 <script>
-const $=s=>document.querySelector(s);let rows=[],charts=[];
+const $=s=>document.querySelector(s);// ضع هنا رابط الـ Webhook بتاع n8n (Production URL). لو سيبته فاضي هيشتغل التحليل المحلي البسيط.
+const WEBHOOK_URL="https://mrmrwan.app.n8n.cloud/webhook/flowcraft-api";
+let rows=[],charts=[],curFile=null;
 const fmt=n=>Math.abs(n)>=1e6?(n/1e6).toFixed(2)+"M":Math.abs(n)>=1e3?(n/1e3).toFixed(1)+"K":(+n.toFixed(2)).toLocaleString("en");
 const msg=(t,e)=>{$("#msg").textContent=t;$("#msg").className=e?"e":""};
 document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("#ask").value=c.textContent});
 async function load(f){
- if(!f)return;
+ if(!f)return;curFile=f;
  if(f.size>10*1024*1024){msg("الملف أكبر من 10 ميجا، قلل حجمه وجرب تاني.",1);return}
  try{const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});
   rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
@@ -95,8 +97,29 @@ function css(v){return getComputedStyle(document.documentElement).getPropertyVal
 function mk(title,cfg){const w=document.createElement("div");w.className="chart";w.innerHTML="<h3></h3><div><canvas></canvas></div>";
  w.querySelector("h3").textContent=title;$("#charts").appendChild(w);
  charts.push(new Chart(w.querySelector("canvas"),cfg))}
-$("#go").onclick=()=>{
+const PAL=["#1D6F42","#C98200","#2E86AB","#A23B72","#6C757D","#4CC183","#F18F01","#7B2CBF"];
+async function remote(){
+ const b=$("#go");b.disabled=true;msg("بنحلل الشيت ونصمم اللوحة...");
+ charts.forEach(c=>c.destroy());charts=[];$("#kpis").innerHTML="";$("#charts").innerHTML="";$("#sum").textContent="";
+ try{
+  const fd=new FormData();fd.append("file",curFile);fd.append("prompt",$("#ask").value.trim());
+  const r=await fetch(WEBHOOK_URL,{method:"POST",body:fd});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  let data=await r.json();if(Array.isArray(data))data=data[0];if(data&&data.output&&typeof data.output==="object")data=data.output;
+  const mu=css("--muted"),gr=css("--grid");Chart.defaults.font.family='"IBM Plex Sans Arabic",sans-serif';Chart.defaults.color=mu;
+  $("#sum").textContent=data.summary||"";
+  (data.kpis||[]).forEach(k=>{const e=document.createElement("div");e.className="kpi";e.innerHTML="<small></small><b></b>";e.children[0].textContent=k.label;e.children[1].textContent=k.value;$("#kpis").appendChild(e)});
+  (data.charts||[]).forEach(c=>{const t=c.type||"bar",round=t==="pie"||t==="doughnut";
+   mk(c.title||"",{type:t,data:{labels:c.labels,datasets:[{data:c.values,backgroundColor:round||t==="bar"?(round?PAL:PAL[0]):PAL[1],borderColor:PAL[1],tension:.3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:round}},scales:round?{}:{x:{grid:{color:gr}},y:{grid:{color:gr},beginAtZero:true}}}})});
+  $("#out").style.display="block";msg("تم التحليل.");$("#out").scrollIntoView({behavior:"smooth"});
+ }catch(e){msg("حصلت مشكلة في الاتصال بالـ Workflow ("+e.message+"). اتأكد إنه شغال وإن CORS متفعّل.",1)}
+ b.disabled=false}
+$("#go").onclick=async()=>{
  if(!rows.length){msg("اختار ملف الأول.",1);return}
+ if(WEBHOOK_URL){await remote();return}
+ local()};
+function local(){
  charts.forEach(c=>c.destroy());charts=[];$("#kpis").innerHTML="";$("#charts").innerHTML="";
  const cols=Object.keys(rows[0]),g=css("--green"),am=css("--amber"),gr=css("--grid"),mu=css("--muted");
  Chart.defaults.font.family='"IBM Plex Sans Arabic",sans-serif';Chart.defaults.color=mu;
