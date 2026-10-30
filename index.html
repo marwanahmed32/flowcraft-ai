@@ -1,239 +1,123 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FlowCraft AI - تحليل بيانات المطاعم والكافيهات</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts (Cairo) -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-  
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #090D16;
-      color: #F3F4F6;
-      overflow-x: hidden;
-    }
-
-    /* Glassmorphism Effect */
-    .glass-card {
-      background: rgba(17, 24, 39, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    }
-
-    /* Glow Effects */
-    .glow-teal {
-      box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
-    }
-
-    .bg-gradient-glow {
-      background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15) 0%, rgba(9, 13, 22, 0) 70%);
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #090D16;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #1F2937;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #10B981;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FlowCraft AI — لوحة تحكم ذكية من ملف الإكسيل</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--paper:#FBFCFA;--ink:#14201B;--muted:#5B6B63;--grid:#DCE5DF;--card:#fff;--green:#1D6F42;--green-s:#E3F1E9;--amber:#C98200;--err:#B3261E;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0F1713;--ink:#E8F0EA;--muted:#93A59A;--grid:#25342C;--card:#16211B;--green:#4CC183;--green-s:#18301F;--amber:#F0B33C;--err:#FF8A80}}
+:root[data-theme="dark"]{--paper:#0F1713;--ink:#E8F0EA;--muted:#93A59A;--grid:#25342C;--card:#16211B;--green:#4CC183;--green-s:#18301F;--amber:#F0B33C;--err:#FF8A80}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.8 "IBM Plex Sans Arabic",system-ui,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font:700 20px "Readex Pro",sans-serif;display:flex;gap:10px;align-items:center;color:var(--ink);text-decoration:none}
+.logo i{width:26px;height:26px;border-radius:6px;background:var(--green);display:grid;grid-template:repeat(2,1fr)/repeat(2,1fr);gap:2px;padding:4px}
+.logo i b{background:var(--paper);border-radius:1px}.logo i b:first-child{grid-column:span 2}
+.nav{background:var(--green);color:var(--paper);padding:8px 18px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px}
+.hero{background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;background-position:center top;border-bottom:1px solid var(--grid)}
+.hero .wrap{padding-top:56px;padding-bottom:64px}
+h1{font:700 clamp(32px,6vw,56px)/1.35 "Readex Pro",sans-serif;margin:0 0 18px;max-width:15em;background:var(--paper);display:inline;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:2px 8px}
+.hero p{max-width:34em;color:var(--muted);margin:22px 0 0;background:var(--paper);padding:2px 8px;display:inline-block}
+.sheet{margin-top:36px;display:inline-grid;grid-template-columns:repeat(4,minmax(70px,auto));border:1px solid var(--grid);background:var(--card);border-radius:10px;overflow:hidden;font-size:14px}
+.sheet span{padding:6px 14px;border-inline-start:1px solid var(--grid);border-top:1px solid var(--grid);color:var(--muted)}
+.sheet .h{background:var(--green-s);color:var(--green);font-weight:600;border-top:0}
+.sheet .s{background:var(--green);color:var(--paper);font-weight:600}
+section.try{padding:56px 0}
+.panel{background:var(--card);border:1px solid var(--grid);border-radius:14px;padding:24px}
+.drop{display:block;border:2px dashed var(--green);border-radius:12px;padding:36px 16px;text-align:center;cursor:pointer;background:var(--green-s);transition:background .2s}
+.drop.on,.drop:focus-within{outline:3px solid var(--amber);outline-offset:2px}
+.drop strong{display:block;font-size:19px}.drop small{color:var(--muted)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+textarea{width:100%;margin-top:18px;min-height:90px;padding:12px 14px;border-radius:10px;border:1px solid var(--grid);background:var(--paper);color:var(--ink);font:inherit;resize:vertical}
+textarea:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{border:1px solid var(--grid);background:var(--paper);color:var(--ink);padding:6px 14px;border-radius:99px;font:inherit;font-size:14px;cursor:pointer}
+.chip:hover{border-color:var(--green);color:var(--green)}
+.go{margin-top:20px;width:100%;padding:14px;border:0;border-radius:10px;background:var(--green);color:var(--paper);font:600 18px "IBM Plex Sans Arabic",sans-serif;cursor:pointer}
+.go:disabled{opacity:.6;cursor:wait}
+#msg{margin-top:12px;min-height:1.6em;color:var(--muted);font-size:15px}#msg.e{color:var(--err)}
+#out{display:none;margin-top:36px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.kpi{background:var(--card);border:1px solid var(--grid);border-inline-start:4px solid var(--green);border-radius:10px;padding:14px 16px}
+.kpi small{color:var(--muted);display:block}.kpi b{font:700 28px "Readex Pro",sans-serif}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+.chart{background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:16px}
+.chart h3{margin:0 0 10px;font:500 16px "Readex Pro",sans-serif}.chart div{position:relative;height:280px}
+footer{border-top:1px solid var(--grid);padding:24px 0;color:var(--muted);text-align:center;font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
 </head>
-<body class="min-h-screen flex flex-col justify-between bg-gradient-glow">
+<body>
+<div class="hero">
+<div class="wrap">
+<header id="top"><a class="logo" href="#top"><i aria-hidden="true"><b></b><b></b><b></b></i>FlowCraft AI</a><a class="nav" href="#try">جرّب النظام</a></header>
+<h1>ارفع الشيت، واللوحة تتبني لوحدها</h1><br>
+<p>كل رقم بيتحسب من ملفك نفسه بدقة، والرسومات بتتختار على حسب نوع بياناتك وطلبك، فمفيش شكل ثابت.</p><br>
+<div class="sheet" aria-hidden="true"><span class="h">المنتج</span><span class="h">الشهر</span><span class="h">المبيعات</span><span class="h">الربح</span>
+<span>شاي</span><span>يناير</span><span>12,400</span><span class="s">3,100</span><span>قهوة</span><span>يناير</span><span>18,900</span><span class="s">6,700</span></div>
+</div></div>
 
-  <!-- Header -->
-  <header class="w-full border-b border-gray-800/60 backdrop-blur-md sticky top-0 z-50 bg-[#090D16]/80">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-black text-xl shadow-lg shadow-emerald-500/20">
-          FC
-        </div>
-        <span class="text-xl font-extrabold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-emerald-400">
-          FlowCraft AI
-        </span>
-      </div>
-      <a href="https://github.com/marwanahmed32/flowcraft-ai" target="_blank" class="text-sm font-semibold text-gray-400 hover:text-emerald-400 transition-colors">
-        GitHub Repository ↗
-      </a>
-    </div>
-  </header>
+<section class="try" id="try"><div class="wrap"><div class="panel">
+<label class="drop" id="drop"><input type="file" id="file" accept=".xlsx,.xls,.csv">
+<strong id="fname">اسحب ملف الإكسيل هنا أو اضغط للاختيار</strong><small>.xlsx / .xls / .csv — حتى 10 ميجا</small></label>
+<textarea id="ask" aria-label="طلبك" placeholder="اكتب اللي عايز تعرفه من الشيت"></textarea>
+<div class="chips"><button class="chip" type="button">اعملي Dashboard شامل للمبيعات</button><button class="chip" type="button">إيه أكتر المنتجات ربحاً؟</button><button class="chip" type="button">حلل الأداء حسب الوقت</button></div>
+<button class="go" id="go" type="button">حلل وابنِ لوحة التحكم</button>
+<div id="msg" role="status"></div></div>
+<div id="out"><div class="kpis" id="kpis"></div><div class="charts" id="charts"></div></div>
+</div></section>
+<footer>© FlowCraft AI</footer>
 
-  <!-- Main Content -->
-  <main class="max-w-6xl mx-auto px-4 py-12 flex-1 w-full flex flex-col gap-12">
-    
-    <!-- Hero Section -->
-    <section class="text-center space-y-4">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        مُحرك التحليل الذكي للمطاعم v2.0
-      </div>
-      <h1 class="text-4xl md:text-6xl font-black text-white leading-tight">
-        حوّل بيانات مطعمك إلى <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-200">قرارات أرباح</span>
-      </h1>
-      <p class="text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
-        ارفع ملف المبيعات (Excel) واكتب استفسارك، وسيستخرج الذكاء الاصطناعي الأرقام والتقارير في ثوانٍ.
-      </p>
-    </section>
-
-    <!-- Upload & Form Card -->
-    <section class="glass-card rounded-3xl p-6 md:p-8 glow-teal">
-      <form id="analytics-form" class="space-y-6">
-        
-        <!-- Drag & Drop / File Input -->
-        <div class="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-2xl p-6 text-center bg-gray-900/40 transition-all group cursor-pointer relative">
-          <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".xlsx, .xls, .csv">
-          <div class="flex flex-col items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-            </div>
-            <div>
-              <p class="text-sm font-semibold text-gray-200" id="file-label">اسحب وأسقط ملف الإكسيل هنا أو اضغط للاختيار</p>
-              <p class="text-xs text-gray-500 mt-1">يدعم صيغ .XLSX, .XLS, .CSV</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Query Input -->
-        <div>
-          <label for="query-input" class="block text-sm font-semibold text-gray-300 mb-2">ما الذي تريد تحليله في هذا الملف؟</label>
-          <textarea id="query-input" rows="3" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl p-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors text-sm" placeholder="مثال: احسب إجمالي المبيعات، الطلبات، وأكثر المنتجات مبيعات خلال هذا الشهر..."></textarea>
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" id="submit-btn" class="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black text-base transition-all transform active:scale-[0.99] shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
-          <span>إرسال وتحليل البيانات</span>
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-        </button>
-      </form>
-    </section>
-
-    <!-- Dynamic Metrics Section (KPI Cards) -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="glass-card rounded-2xl p-5 text-center">
-        <p class="text-xs text-gray-400 mb-1">إجمالي المبيعات</p>
-        <p class="text-xl md:text-2xl font-extrabold text-emerald-400" id="stat-sales">—</p>
-      </div>
-      <div class="glass-card rounded-2xl p-5 text-center">
-        <p class="text-xs text-gray-400 mb-1">عدد الطلبات</p>
-        <p class="text-xl md:text-2xl font-extrabold text-teal-400" id="stat-orders">—</p>
-      </div>
-      <div class="glass-card rounded-2xl p-5 text-center">
-        <p class="text-xs text-gray-400 mb-1">متوسط قيمة الطلب</p>
-        <p class="text-xl md:text-2xl font-extrabold text-cyan-400" id="stat-avg">—</p>
-      </div>
-      <div class="glass-card rounded-2xl p-5 text-center">
-        <p class="text-xs text-gray-400 mb-1">الأرباح الصافية</p>
-        <p class="text-xl md:text-2xl font-extrabold text-emerald-300" id="stat-profit">—</p>
-      </div>
-    </section>
-
-    <!-- AI Insights & Report Section -->
-    <section class="glass-card rounded-2xl p-6 md:p-8 space-y-4">
-      <div class="flex items-center gap-3 border-b border-gray-800 pb-4">
-        <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
-        <h2 class="text-lg font-bold text-white">تقرير وتوصيات الذكاء الاصطناعي</h2>
-      </div>
-      <div id="ai-report" class="text-gray-300 leading-relaxed text-sm md:text-base min-h-[80px]">
-        لا يوجد تقرير نصي حتى الآن. يرجى إرسال ملف وطلب للبدء.
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="w-full border-t border-gray-800/60 py-6 text-center text-xs text-gray-500">
-    <p>© 2026 FlowCraft AI - Developed by Marwan Ahmed</p>
-  </footer>
-
-  <!-- Script Code Integration -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('analytics-form');
-      const fileInput = document.getElementById('file-input');
-      const fileLabel = document.getElementById('file-label');
-      const queryInput = document.getElementById('query-input');
-      const submitBtn = document.getElementById('submit-btn');
-
-      // رابط الـ Webhook بتاع n8n
-      const N8N_WEBHOOK_URL = 'https://mrmrwan.app.n8n.cloud/webhook/flowcraft-api'; // استبدله برابط الـ Production Webhook المباشر من n8n
-
-      // تغيير اسم الملف عند اختياره
-      fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-          fileLabel.innerText = `الملف المختار: ${e.target.files[0].name}`;
-          fileLabel.classList.add('text-emerald-400');
-        }
-      });
-
-      // إرسال البيانات للـ Webhook
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const userQuery = queryInput.value.trim() || 'تحليل بيانات المطعم الشاملة';
-        const selectedFile = fileInput.files.length > 0 ? fileInput.files[0] : null;
-
-        // حالة التحميل (Loading State)
-        const originalBtnHTML = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-          <svg class="animate-spin h-5 w-5 text-black inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg> جاري المعالجة بالذكاء الاصطناعي...`;
-
-        try {
-          const payload = {
-            file_name: selectedFile ? selectedFile.name : 'no_file',
-            query: userQuery,
-            timestamp: new Date().toISOString()
-          };
-
-          const response = await fetch(N8N_WEBHOOK_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (!response.ok) {
-            throw new Error(`خطأ في السيرفر: ${response.status}`);
-          }
-
-          const data = await response.json();
-          console.log('RAW n8n response:', data);
-
-          // تحديث الواجهة بالأرقام والتقرير الديناميكي
-          if (data.status === 'success' || data.total_sales) {
-            document.getElementById('stat-sales').innerText = data.total_sales || '—';
-            document.getElementById('stat-orders').innerText = data.total_orders || '—';
-            document.getElementById('stat-avg').innerText = data.avg_order_value || '—';
-            document.getElementById('stat-profit').innerText = data.net_profit || '—';
-            
-            document.getElementById('ai-report').innerText = data.analysis || 'تمت المعالجة بنجاح.';
-          }
-
-        } catch (error) {
-          console.error('Fetch Error:', error);
-          alert('حدث خطأ في الاتصال بالسيرفر. تأكد من تفعيل الـ Workflow في n8n وضبط رابط الـ Webhook.');
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalBtnHTML;
-        }
-      });
-    });
-  </script>
+<script>
+const $=s=>document.querySelector(s);let rows=[],charts=[];
+const fmt=n=>Math.abs(n)>=1e6?(n/1e6).toFixed(2)+"M":Math.abs(n)>=1e3?(n/1e3).toFixed(1)+"K":(+n.toFixed(2)).toLocaleString("en");
+const msg=(t,e)=>{$("#msg").textContent=t;$("#msg").className=e?"e":""};
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("#ask").value=c.textContent});
+async function load(f){
+ if(!f)return;
+ if(f.size>10*1024*1024){msg("الملف أكبر من 10 ميجا، قلل حجمه وجرب تاني.",1);return}
+ try{const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});
+  rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+  $("#fname").textContent=f.name+" — "+rows.length+" صف";
+  msg(rows.length?"الملف جاهز. اكتب طلبك أو اضغط تحليل.":"الشيت فاضي، اختار ملف فيه بيانات.",!rows.length)
+ }catch(e){rows=[];msg("مش قادر أقرأ الملف. اتأكد إنه xlsx أو xls أو csv سليم.",1)}}
+$("#file").onchange=e=>load(e.target.files[0]);
+const d=$("#drop");["dragover","dragenter"].forEach(v=>d.addEventListener(v,e=>{e.preventDefault();d.classList.add("on")}));
+["dragleave","drop"].forEach(v=>d.addEventListener(v,e=>{e.preventDefault();d.classList.remove("on")}));
+d.addEventListener("drop",e=>load(e.dataTransfer.files[0]));
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function mk(title,cfg){const w=document.createElement("div");w.className="chart";w.innerHTML="<h3></h3><div><canvas></canvas></div>";
+ w.querySelector("h3").textContent=title;$("#charts").appendChild(w);
+ charts.push(new Chart(w.querySelector("canvas"),cfg))}
+$("#go").onclick=()=>{
+ if(!rows.length){msg("اختار ملف الأول.",1);return}
+ charts.forEach(c=>c.destroy());charts=[];$("#kpis").innerHTML="";$("#charts").innerHTML="";
+ const cols=Object.keys(rows[0]),g=css("--green"),am=css("--amber"),gr=css("--grid"),mu=css("--muted");
+ Chart.defaults.font.family='"IBM Plex Sans Arabic",sans-serif';Chart.defaults.color=mu;
+ const num=cols.filter(c=>{const v=rows.map(r=>r[c]).filter(x=>x!=null);return v.length&&v.filter(x=>typeof x==="number").length/v.length>.8});
+ const dat=cols.find(c=>rows.some(r=>r[c] instanceof Date));
+ const cat=cols.filter(c=>!num.includes(c)&&c!==dat).find(c=>{const u=new Set(rows.map(r=>r[c]));return u.size>1&&u.size<=40});
+ const add=(l,v)=>{const k=document.createElement("div");k.className="kpi";k.innerHTML="<small></small><b></b>";k.children[0].textContent=l;k.children[1].textContent=v;$("#kpis").appendChild(k)};
+ add("عدد الصفوف",rows.length.toLocaleString("en"));
+ num.slice(0,3).forEach(c=>{const s=rows.reduce((a,r)=>a+(+r[c]||0),0);add("إجمالي "+c,fmt(s));});
+ const m=num[0];
+ if(!m){msg("مفيش أعمدة أرقام في الشيت، فمقدرتش أبني رسومات.",1);$("#out").style.display="block";return}
+ const opt=(x)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gr}},y:{grid:{color:gr},beginAtZero:true}},...x});
+ if(cat){const t={};rows.forEach(r=>{const k=r[cat]??"—";t[k]=(t[k]||0)+(+r[m]||0)});
+  const e=Object.entries(t).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  mk(m+" حسب "+cat,{type:"bar",data:{labels:e.map(x=>x[0]),datasets:[{data:e.map(x=>x[1]),backgroundColor:g,borderRadius:4}]},options:opt({indexAxis:"y"})});}
+ if(dat){const t={};rows.forEach(r=>{const v=r[dat];if(v instanceof Date){const k=v.getFullYear()+"-"+String(v.getMonth()+1).padStart(2,"0");t[k]=(t[k]||0)+(+r[m]||0)}});
+  const e=Object.entries(t).sort();
+  mk(m+" عبر الوقت",{type:"line",data:{labels:e.map(x=>x[0]),datasets:[{data:e.map(x=>x[1]),borderColor:am,backgroundColor:am,tension:.3,pointRadius:3}]},options:opt({})});}
+ if(num[1]){const s=rows.slice(0,200);
+  mk(num[1]+" مقابل "+m,{type:"scatter",data:{datasets:[{data:s.map(r=>({x:+r[m]||0,y:+r[num[1]]||0})),backgroundColor:g}]},options:opt({})});}
+ $("#out").style.display="block";msg("تم التحليل.");$("#out").scrollIntoView({behavior:"smooth"})};
+</script>
 </body>
 </html>
